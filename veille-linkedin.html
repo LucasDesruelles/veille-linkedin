@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Veille LinkedIn – Flux</title>
+<link href="https://unpkg.com/@picocss/pico@2.0.6/css/pico.min.css" rel="stylesheet">
+<style>
+body{max-width:1200px;margin:auto;padding:16px}
+.controls{display:grid;grid-template-columns:1fr 220px 160px 160px 180px;gap:8px;margin:12px 0}
+@media(max-width:1000px){.controls{grid-template-columns:1fr 1fr}}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}
+.card{border:1px solid #e6e6e6;border-radius:12px;overflow:hidden;background:#fff;display:flex;flex-direction:column}
+.head{display:flex;align-items:center;gap:10px;padding:12px}
+.head img{width:28px;height:28px;border-radius:50%}
+.media{aspect-ratio:16/9;background:#f3f3f3;display:flex;align-items:center;justify-content:center}
+.media img{width:100%;height:100%;object-fit:cover}
+.body{padding:12px}
+.meta{color:#666;font-size:12px;margin-top:6px}
+.badges{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.badge{font-size:12px;border:1px solid #ddd;border-radius:999px;padding:2px 8px;color:#444}
+.actions{display:flex;gap:8px;margin-top:10px}
+</style>
+</head>
+<body>
+<h2>Veille LinkedIn</h2>
+
+<div class="controls">
+  <input id="q" type="search" placeholder="Filtrer par mots-clés…">
+  <select id="author"><option value="">Tous auteurs</option></select>
+  <select id="type">
+    <option value="">Tous types</option>
+    <option value="image">Image</option>
+    <option value="linkedinVideo">Vidéo</option>
+    <option value="document">Document</option>
+    <option value="text">Texte/Reshare</option>
+  </select>
+  <input id="minLikes" type="number" min="0" value="0" placeholder="Likes min">
+  <select id="sort">
+    <option value="dateDesc">Récents → anciens</option>
+    <option value="dateAsc">Anciens → récents</option>
+    <option value="likesDesc">Likes ↓</option>
+    <option value="commentsDesc">Commentaires ↓</option>
+    <option value="sharesDesc">Partages ↓</option>
+  </select>
+</div>
+
+<button id="reload" class="secondary">Recharger</button>
+<div id="count" style="margin:8px 0;color:#666"></div>
+<div id="grid" class="grid"></div>
+
+<script>
+const DATA_URL="https://api.apify.com/v2/acts/supreme_coder~linkedin-post/runs/last/dataset/items?token=apify_api_KY6uoGqkXVFhCzeYBQO0OQFjnGs2RB3HzGy9";
+let RAW=[],VIEW=[];
+
+function mapItem(o){
+  const author=(o.author&&o.author.name)||o.authorName||"";
+  const authorLogo=(o.author&&o.author.logoUrl)||o.authorProfilePicture||"";
+  const authorUrl=(o.author&&o.author.universalName)?("https://www.linkedin.com/company/"+o.author.universalName+"/"):(o.authorProfileUrl||"");
+  const date=o.postedAtISO?new Date(o.postedAtISO):(o.postedAtTimestamp?new Date(o.postedAtTimestamp):null);
+  const likes=Number(o.numLikes||o.reactions||0);
+  const comments=Number(o.numComments||0);
+  const shares=Number(o.numShares||0);
+  const text=o.text||"";
+  const url=o.url||"";
+  const type=o.type||"";
+  let cover=null;
+  if(type==="image"&&Array.isArray(o.images)&&o.images.length) cover=o.images[0];
+  else if(type==="document"&&o.document&&Array.isArray(o.document.coverPages)&&o.document.coverPages.length) cover=o.document.coverPages[0];
+  else if(type==="linkedinVideo"&&o.linkedinVideo&&o.linkedinVideo.videoPlayMetadata&&o.linkedinVideo.videoPlayMetadata.thumbnail&&o.linkedinVideo.videoPlayMetadata.thumbnail.rootUrl) cover=o.linkedinVideo.videoPlayMetadata.thumbnail.rootUrl;
+  return {author,authorLogo,authorUrl,date,likes,comments,shares,text,url,type,cover};
+}
+
+function uniq(a){return Array.from(new Set(a.filter(Boolean)));}
+
+function render(posts){
+  const grid=document.getElementById("grid");
+  const count=document.getElementById("count");
+  grid.innerHTML="";
+  count.textContent=posts.length?posts.length+" posts":"Aucun post ne correspond aux filtres";
+  posts.forEach(p=>{
+    const card=document.createElement("article");
+    card.className="card";
+
+    const head=document.createElement("div");
+    head.className="head";
+    head.innerHTML=(p.authorLogo?('<img src="'+p.authorLogo+'" alt="">'):"")+'<div><strong>'+(p.author||"")+'</strong><div class="meta">'+(p.date?p.date.toLocaleString("fr-FR"):"")+'</div></div>';
+    card.appendChild(head);
+
+    const media=document.createElement("div");
+    media.className="media";
+    if(p.cover) media.innerHTML='<img loading="lazy" src="'+p.cover+'">'; else media.innerHTML="";
+    card.appendChild(media);
+
+    const body=document.createElement("div");
+    body.className="body";
+    const textShort=p.text?p.text.slice(0,280)+(p.text.length>280?"…":""):"";
+    if(textShort) body.insertAdjacentHTML("beforeend","<p>"+textShort+"</p>");
+
+    const badges=document.createElement("div");
+    badges.className="badges";
+    badges.innerHTML='<span class="badge">👍 '+p.likes+'</span><span class="badge">💬 '+p.comments+'</span><span class="badge">↗️ '+p.shares+'</span>'+ (p.type?'<span class="badge">'+p.type+'</span>':"");
+    body.appendChild(badges);
+
+    const actions=document.createElement("div");
+    actions.className="actions";
+    if(p.url) actions.insertAdjacentHTML("beforeend",'<a class="contrast" target="_blank" rel="noopener" href="'+p.url+'">Ouvrir sur LinkedIn</a>');
+    if(p.authorUrl) actions.insertAdjacentHTML("beforeend",'<a class="secondary" target="_blank" rel="noopener" href="'+p.authorUrl+'">Page</a>');
+    body.appendChild(actions);
+
+    card.appendChild(body);
+    grid.appendChild(card);
+  });
+}
+
+function applyFilters(){
+  const q=document.getElementById("q").value.trim().toLowerCase();
+  const author=document.getElementById("author").value;
+  const type=document.getElementById("type").value;
+  const minLikes=Number(document.getElementById("minLikes").value||0);
+  const sort=document.getElementById("sort").value;
+
+  let arr=RAW.slice();
+  if(q) arr=arr.filter(p=>(p.text&&p.text.toLowerCase().includes(q))||(p.author&&p.author.toLowerCase().includes(q)));
+  if(author) arr=arr.filter(p=>p.author===author);
+  if(type) arr=arr.filter(p=>p.type===type);
+  if(minLikes>0) arr=arr.filter(p=>p.likes>=minLikes);
+
+  if(sort==="dateDesc") arr.sort((a,b)=>(b.date?.getTime()||0)-(a.date?.getTime()||0));
+  else if(sort==="dateAsc") arr.sort((a,b)=>(a.date?.getTime()||0)-(b.date?.getTime()||0));
+  else if(sort==="likesDesc") arr.sort((a,b)=>b.likes-a.likes);
+  else if(sort==="commentsDesc") arr.sort((a,b)=>b.comments-a.comments);
+  else if(sort==="sharesDesc") arr.sort((a,b)=>b.shares-a.shares);
+
+  VIEW=arr;
+  render(VIEW);
+}
+
+async function load(){
+  const res=await fetch(DATA_URL,{cache:"no-store"});
+  const data=await res.json();
+  const list=Array.isArray(data)?data:(Array.isArray(data.items)?data.items:[]);
+  RAW=list.map(mapItem);
+  const authors=uniq(RAW.map(p=>p.author)).sort((a,b)=>a.localeCompare(b,"fr"));
+  const sel=document.getElementById("author");
+  sel.innerHTML='<option value="">Tous auteurs</option>'+authors.map(a=>'<option value="'+a+'">'+a+'</option>').join("");
+  applyFilters();
+}
+
+document.getElementById("q").addEventListener("input",applyFilters);
+document.getElementById("author").addEventListener("change",applyFilters);
+document.getElementById("type").addEventListener("change",applyFilters);
+document.getElementById("minLikes").addEventListener("input",applyFilters);
+document.getElementById("sort").addEventListener("change",applyFilters);
+document.getElementById("reload").addEventListener("click",load);
+load();
+</script>
+</body>
+</html>
