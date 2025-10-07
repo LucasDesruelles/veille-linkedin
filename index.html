@@ -6,21 +6,61 @@
 <title>Veille LinkedIn – Flux</title>
 <link href="https://unpkg.com/@picocss/pico@2.0.6/css/pico.min.css" rel="stylesheet">
 <style>
-body{max-width:1200px;margin:auto;padding:16px}
-.controls{display:grid;grid-template-columns:1fr 200px 160px 180px;gap:8px;margin:12px 0}
+:root{
+  --bg: #0b0c0f;
+  --card: #111318;
+  --border: #1b1e25;
+  --text: #e9ecf1;
+  --muted: #a7b0be;
+  --accent: #4f8cff;
+  --accent-2: #7aa2ff;
+}
+@media (prefers-color-scheme: light){
+  :root{
+    --bg:#f7f8fb; --card:#ffffff; --border:#e7e8ee; --text:#0d1117; --muted:#5b6472; --accent:#3b82f6; --accent-2:#60a5fa;
+  }
+}
+html,body{background:var(--bg); color:var(--text)}
+body{max-width:900px;margin:auto;padding:18px}
+h2{font-weight:700;letter-spacing:.2px;margin:4px 0 12px}
+.header-sub{color:var(--muted);font-size:.95rem;margin-bottom:16px}
+.controls{
+  position: sticky; top: 0; z-index: 20;
+  display:grid; grid-template-columns:1fr 200px 140px 170px; gap:10px; margin:12px 0 14px;
+  padding:12px; border:1px solid var(--border); border-radius:14px; background:color-mix(in oklab, var(--card) 88%, transparent 12%);
+  -webkit-backdrop-filter:saturate(120%) blur(6px); backdrop-filter:saturate(120%) blur(6px)
+}
 @media(max-width:900px){.controls{grid-template-columns:1fr 1fr}}
-.grid{display:grid;gap:16px}
-.card{border:1px solid #e6e6e6;border-radius:12px;overflow:hidden;background:#fff}
-.head{display:flex;align-items:center;gap:10px;padding:12px}
-.head img{width:28px;height:28px;border-radius:50%}
-.badges{display:flex;gap:8px;flex-wrap:wrap;padding:0 12px 12px}
-.badge{font-size:12px;border:1px solid #ddd;border-radius:999px;padding:2px 8px;color:#444}
-.iframe{width:100%;height:420px;border:0}
-.meta{color:#666;font-size:12px}
+button.secondary, select, input{background:var(--card); color:var(--text); border:1px solid var(--border)}
+button.secondary:hover{border-color:color-mix(in oklab, var(--accent) 40%, var(--border))}
+#reload{justify-self:end}
+.count{color:var(--muted);font-size:.92rem;margin:6px 0 10px}
+.grid{display:grid; grid-template-columns:1fr; gap:18px}
+.card{
+  border:1px solid var(--border); border-radius:16px; overflow:hidden; background:var(--card); display:flex; flex-direction:column;
+  box-shadow:0 6px 18px rgba(0,0,0,.12)
+}
+.head{display:flex;align-items:center;gap:12px;padding:14px 16px 8px 16px}
+.head img{width:34px;height:34px;border-radius:50%;object-fit:cover;border:1px solid var(--border)}
+.head .who{display:flex;flex-direction:column;gap:2px}
+.head .name{font-weight:600}
+.head .meta{color:var(--muted);font-size:.88rem}
+.badges{display:flex;gap:8px;flex-wrap:wrap;padding:2px 16px 10px 16px}
+.badge{font-size:.82rem;border:1px solid var(--border);border-radius:999px;padding:4px 10px;color:var(--text);background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(0,0,0,.03))}
+.badge.link a{color:var(--text);text-decoration:none}
+.badge.link a:hover{color:var(--accent)}
+.embed{width:100%; aspect-ratio:16/9; background:#0f1116; border-top:1px solid var(--border)}
+.embed iframe{width:100%; height:100%; border:0; border-bottom:1px solid var(--border)}
+.fallback{padding:14px 16px;font-size:1rem;line-height:1.4;color:var(--text)}
+.footer-actions{display:flex;gap:10px;padding:12px 16px 16px 16px}
+.footer-actions a{border:1px solid var(--border); border-radius:12px; padding:8px 12px; text-decoration:none; color:var(--text); background:var(--card)}
+.footer-actions a:hover{border-color:var(--accent)}
+hr.sep{border:none;border-top:1px solid var(--border);margin:0}
 </style>
 </head>
 <body>
 <h2>Veille LinkedIn</h2>
+<p class="header-sub">Dernier run Apify • filtres front • flux intégré responsive</p>
 
 <div class="controls">
   <input id="q" type="search" placeholder="Filtrer par mots-clés…">
@@ -34,13 +74,11 @@ body{max-width:1200px;margin:auto;padding:16px}
   </select>
 </div>
 
-<button id="reload" class="secondary">Recharger</button>
-<div id="count" style="margin:8px 0;color:#666"></div>
+<div class="count" id="count"></div>
 <div id="grid" class="grid"></div>
 
 <script>
-const DATA_URL = "https://api.apify.com/v2/acts/supreme_coder~linkedin-post/runs/last/dataset/items?token=apify_api_KY6uoGqkXVFhCzeYBQO0OQFjnGs2RB3HzGy9";
-
+const DATA_URL = "https://api.apify.com/v2/actor-tasks/TA_TASK_ID/runs/last/dataset/items?format=json&clean=true&token=APIFY_API_TOKEN";
 let RAW=[], VIEW=[];
 
 function getActivityId(item){
@@ -79,33 +117,34 @@ function render(posts){
 
     const head=document.createElement("div");
     head.className="head";
-    head.innerHTML=
-      (p.authorLogo?('<img src="'+p.authorLogo+'" alt="">'):"")+
-      '<div><strong>'+(p.author||"")+'</strong><div class="meta">'+(p.date?p.date.toLocaleString("fr-FR"):"")+'</div></div>';
+    head.innerHTML=(p.authorLogo?('<img src="'+p.authorLogo+'" alt="">'):"")+'<div class="who"><span class="name">'+(p.author||"")+'</span><span class="meta">'+(p.date?p.date.toLocaleString("fr-FR"):"")+'</span></div>';
     card.appendChild(head);
 
     const badges=document.createElement("div");
     badges.className="badges";
-    badges.innerHTML='<span class="badge">👍 '+p.likes+'</span><span class="badge">💬 '+p.comments+'</span>'+
-      (p.url?('<a href="'+p.url+'" target="_blank" rel="noopener" class="badge">Ouvrir sur LinkedIn</a>'):"");
+    badges.innerHTML='<span class="badge">👍 '+p.likes+'</span><span class="badge">💬 '+p.comments+'</span>'+ (p.url?('<span class="badge link"><a href="'+p.url+'" target="_blank" rel="noopener">Ouvrir LinkedIn</a></span>'):"");
     card.appendChild(badges);
 
     const wrap=document.createElement("div");
     if (p.activityId){
+      wrap.className="embed";
       const src='https://www.linkedin.com/embed/feed/update/urn:li:activity:'+p.activityId;
       const iframe=document.createElement("iframe");
-      iframe.className="iframe";
-      iframe.src=src;
-      iframe.allowFullscreen=true;
-      iframe.title="LinkedIn post";
+      iframe.src=src; iframe.allowFullscreen=true; iframe.title="LinkedIn post";
       wrap.appendChild(iframe);
     } else {
-      const fallback=document.createElement("div");
-      fallback.style.padding="12px";
-      fallback.innerHTML='<p>'+ (p.text ? p.text.slice(0,280)+(p.text.length>280?"…":"") : "Aperçu indisponible") +'</p>';
-      wrap.appendChild(fallback);
+      wrap.className="fallback";
+      wrap.textContent = p.text ? (p.text.length>320 ? p.text.slice(0,320)+"…" : p.text) : "Aperçu indisponible";
     }
     card.appendChild(wrap);
+
+    const hr=document.createElement("hr"); hr.className="sep"; card.appendChild(hr);
+
+    const actions=document.createElement("div");
+    actions.className="footer-actions";
+    if(p.url){ const a=document.createElement("a"); a.href=p.url; a.target="_blank"; a.rel="noopener"; a.textContent="Voir le post"; actions.appendChild(a); }
+    if(p.authorUrl){ const a2=document.createElement("a"); a2.href=p.authorUrl; a2.target="_blank"; a2.rel="noopener"; a2.textContent="Voir la page"; actions.appendChild(a2); }
+    card.appendChild(actions);
 
     grid.appendChild(card);
   });
@@ -152,7 +191,9 @@ document.getElementById("q").addEventListener("input",applyFilters);
 document.getElementById("author").addEventListener("change",applyFilters);
 document.getElementById("minLikes").addEventListener("input",applyFilters);
 document.getElementById("sort").addEventListener("change",applyFilters);
-document.getElementById("reload").addEventListener("click",load);
+
+const reloadBtn=document.getElementById("reload");
+if(reloadBtn){ reloadBtn.addEventListener("click",load); }
 
 load();
 </script>
