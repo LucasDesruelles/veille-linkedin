@@ -114,7 +114,7 @@ hr.sep{border:none;border-top:1px solid var(--border);margin:0}
 </section>
 
 <script>
-const DATA_URL="https://api.apify.com/v2/acts/supreme_coder~linkedin-post/runs/last?token=apify_api_KY6uoGqkXVFhCzeYBQO0OQFjnGs2RB3HzGy9";
+const DATA_URL="https://api.apify.com/v2/acts/supreme_coder~linkedin-post/runs/last/dataset/items?token=apify_api_KY6uoGqkXVFhCzeYBQO0OQFjnGs2RB3HzGy9";
 let RAW=[],VIEW=[],FAVS=new Set(JSON.parse(localStorage.getItem("veille_favs")||"[]")),ACTIVE_WORD=null;
 
 function getActivityId(item){
@@ -327,3 +327,4 @@ load();
 </script>
 </body>
 </html>
+
