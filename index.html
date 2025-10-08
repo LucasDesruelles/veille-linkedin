@@ -51,11 +51,15 @@ hr.sep{border:none;border-top:1px solid var(--border);margin:0}
 .wcloud{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
 .wc{border:1px solid var(--border);border-radius:999px;padding:6px 10px;cursor:pointer;background:var(--card)}
 .wc.active{border-color:var(--accent)}
+.cloud-controls{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;align-items:center}
+.table{width:100%;border-collapse:separate;border-spacing:0;margin-top:12px}
+.table th,.table td{padding:10px;border-bottom:1px solid var(--border);text-align:left}
+.table th{color:var(--muted);font-weight:600}
 </style>
 </head>
 <body>
 <h2>Veille LinkedIn</h2>
-<p class="header-sub">Dernier run Apify • filtres front • favoris • export • heatmap • nuage de mots</p>
+<p class="header-sub">Dernier run Apify • filtres front • favoris • heatmap • nuage de mots propre • tableau auteurs</p>
 
 <div class="controls">
   <input id="q" type="search" placeholder="Filtrer par mots-clés…">
@@ -74,7 +78,6 @@ hr.sep{border:none;border-top:1px solid var(--border);margin:0}
     <option value="commentsDesc">Commentaires ↓</option>
   </select>
   <div style="display:flex;gap:8px;justify-content:flex-end">
-    <button id="exportBtn">Exporter CSV</button>
     <button id="reload">Recharger</button>
   </div>
 </div>
@@ -94,18 +97,31 @@ hr.sep{border:none;border-top:1px solid var(--border);margin:0}
 <section id="insights" class="section">
   <div class="panel">
     <div class="kpis">
-      <div class="kpi"><div>Total posts</div><div id="kpiPosts" class="v">0</div></div>
-      <div class="kpi"><div>Likes totaux</div><div id="kpiLikes" class="v">0</div></div>
-      <div class="kpi"><div>Commentaires totaux</div><div id="kpiComments" class="v">0</div></div>
+      <div class="kpi"><div>Total posts (filtrés)</div><div id="kpiPosts" class="v">0</div></div>
+      <div class="kpi"><div>Likes (filtrés)</div><div id="kpiLikes" class="v">0</div></div>
+      <div class="kpi"><div>Commentaires (filtrés)</div><div id="kpiComments" class="v">0</div></div>
     </div>
   </div>
   <div class="panel" style="margin-top:12px">
-    <h5>Créneaux d’engagement (heatmap)</h5>
+    <h5>Créneaux d’engagement (heatmap des posts filtrés)</h5>
     <table class="heat" id="heat"></table>
   </div>
   <div class="panel" style="margin-top:12px">
-    <h5>Nuage de mots clés</h5>
+    <h5>Nuage de mots clés (posts filtrés)</h5>
+    <div class="cloud-controls">
+      <label><input type="checkbox" id="cloudHashtags"> Hashtags seulement</label>
+      <label>Min occurrences <input id="cloudMin" type="number" value="2" min="1" style="width:72px"></label>
+      <input id="cloudStop" type="text" placeholder="Stopwords perso, séparés par des virgules" style="min-width:280px">
+      <button id="cloudReset">Réinitialiser filtre mot</button>
+    </div>
     <div id="wcloud" class="wcloud"></div>
+  </div>
+  <div class="panel" style="margin-top:12px">
+    <h5>Auteurs (sur posts filtrés)</h5>
+    <table class="table" id="authorsTbl">
+      <thead><tr><th>Auteur</th><th>Posts</th><th>Likes</th><th>Commentaires</th></tr></thead>
+      <tbody></tbody>
+    </table>
   </div>
 </section>
 
@@ -217,43 +233,50 @@ function renderFavorites(){
   render(favPosts,"favGrid");
 }
 
-function exportCSV(){
-  const rows=[["author","date","likes","comments","url","text"]];
-  VIEW.forEach(p=>rows.push([p.author,p.date?p.date.toISOString():"",p.likes,p.comments,p.url,(p.text||"").replace(/\s+/g," ").trim()]));
-  const csv=rows.map(r=>r.map(x=>`"${String(x).replace(/"/g,'""')}"`).join(",")).join("\n");
-  const blob=new Blob([csv],{type:"text/csv;charset=utf-8;"});
-  const a=document.createElement("a");
-  a.href=URL.createObjectURL(blob);
-  a.download="veille_linkedin.csv";
-  a.click();
-  URL.revokeObjectURL(a.href);
-}
-
 function tokenize(text){
-  return text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9àâäçéèêëîïôöùûü\s#]/gi," ").split(/\s+/).filter(Boolean);
+  return text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9#\s]/gi," ").split(/\s+/).filter(Boolean);
 }
 
-const STOP=new Set(["le","la","les","de","des","du","un","une","et","ou","en","au","aux","dans","pour","par","sur","avec","sans","plus","moins","est","sont","cest","que","qui","quoi","quand","où","a","à","d","l","vos","nos","notre","votre","ce","cet","cette","se","sa","son","leurs","leurs","ils","elles","on","nous","vous","je","tu","il","elle","mes","tes","ses","aux","ne","pas","plus","très","via","rt","deux","trois","the","and","of"]);
+const STOP=new Set(["le","la","les","de","des","du","un","une","et","ou","en","au","aux","dans","pour","par","sur","avec","sans","entre","chez","vers","sous","sur","ce","cet","cette","cela","ça","cette","ces","son","sa","ses","leur","leurs","notre","vos","votre","nos","plus","moins","tres","est","sont","ete","etre","ete","serai","sera","seront","etre","que","qui","quoi","quand","ou","a","à","d","l","je","tu","il","elle","on","nous","vous","ils","elles","me","te","se","y","en","ne","pas","ni","car","donc","or","mais","si","comme","afin","alors","ainsi","apres","avant","depuis","pendant","toujours","jamais","tout","toute","tous","toutes","dont","aujourd","hui","the","and","of","to","in","is","are","be","have","has","had","do","did","rt","via","very","plus","moins","encore","tres","trop","bien","mal","bon","bonne","aussi","ailleurs","quel","quelle","quels","quelles","cet","cette","ceci","cela","dont","car","afin","des","du","aux","au"]);
+const COMMON_VERBS=new Set(["etre","avoir","aller","faire","pouvoir","devoir","mettre","dire","voir","savoir","venir","falloir","parler","prendre","donner","trouver","comprendre","poser","lancer","developper","partager","decouvrir","rejoindre","lire"]);
 
 function buildWordCloud(posts){
-  const freq=new Map();
+  const onlyHashtags=document.getElementById("cloudHashtags").checked;
+  const minOcc=Math.max(1,parseInt(document.getElementById("cloudMin").value||"2",10));
+  const custom=document.getElementById("cloudStop").value.toLowerCase().split(",").map(s=>s.trim()).filter(Boolean);
+  const STOP_ALL=new Set([...STOP, ...COMMON_VERBS, ...custom]);
+
+  const freq=new Map(), df=new Map();
+  const N=posts.length||1;
   posts.forEach(p=>{
+    const seen=new Set();
     const words=tokenize(p.text||"");
     words.forEach(w=>{
-      if(w.length<3)return;
-      if(STOP.has(w))return;
-      if(w.startsWith("http"))return;
-      const v=freq.get(w)||0;
-      freq.set(w,v+1);
+      const isHashtag=w.startsWith("#");
+      const core=isHashtag?w.slice(1):w;
+      if(onlyHashtags && !isHashtag) return;
+      if(core.length<4 && !isHashtag) return;
+      if(STOP_ALL.has(core)) return;
+      if(/^\d+$/.test(core)) return;
+      const token=isHashtag?("#"+core):core;
+      freq.set(token,(freq.get(token)||0)+1);
+      if(!seen.has(token)){ df.set(token,(df.get(token)||0)+1); seen.add(token); }
     });
   });
-  const arr=Array.from(freq.entries()).sort((a,b)=>b[1]-a[1]).slice(0,30);
+
+  const scored=Array.from(freq.entries()).map(([w,f])=>{
+    const d=df.get(w)||1;
+    const idf=Math.log((N+1)/(d));
+    const score=f*idf;
+    return {w,f,score};
+  }).filter(x=>x.f>=minOcc).sort((a,b)=>b.score-a.score).slice(0,40);
+
   const wc=document.getElementById("wcloud");
-  wc.innerHTML=arr.map(([w,c])=>`<button class="wc${ACTIVE_WORD===w?' active':''}" data-w="${w}">${w} (${c})</button>`).join("");
+  wc.innerHTML=scored.map(x=>`<button class="wc${ACTIVE_WORD===x.w?' active':''}" data-w="${x.w}">${x.w} (${x.f})</button>`).join("");
   wc.querySelectorAll(".wc").forEach(b=>{
     b.addEventListener("click",()=>{
       const w=b.getAttribute("data-w");
-      if(ACTIVE_WORD===w){ACTIVE_WORD=null}else{ACTIVE_WORD=w}
+      if(ACTIVE_WORD===w){ACTIVE_WORD=null}else{ACTIVE_WORD=w.toLowerCase()}
       applyFilters();
     });
   });
@@ -284,6 +307,19 @@ function buildHeatmap(posts){
   table.innerHTML=html;
 }
 
+function buildAuthorsTable(posts){
+  const agg=new Map();
+  posts.forEach(p=>{
+    const key=p.author||"Inconnu";
+    const a=agg.get(key)||{posts:0,likes:0,comments:0};
+    a.posts+=1; a.likes+=p.likes; a.comments+=p.comments;
+    agg.set(key,a);
+  });
+  const rows=Array.from(agg.entries()).map(([name,a])=>({name,...a})).sort((x,y)=>y.likes-x.likes);
+  const tbody=document.querySelector("#authorsTbl tbody");
+  tbody.innerHTML=rows.map(r=>`<tr><td>${r.name}</td><td>${r.posts}</td><td>${r.likes}</td><td>${r.comments}</td></tr>`).join("");
+}
+
 function updateInsights(posts){
   const likes=posts.reduce((s,p)=>s+p.likes,0);
   const comments=posts.reduce((s,p)=>s+p.comments,0);
@@ -292,6 +328,7 @@ function updateInsights(posts){
   document.getElementById("kpiComments").textContent=comments;
   buildHeatmap(posts);
   buildWordCloud(posts);
+  buildAuthorsTable(posts);
 }
 
 async function load(){
@@ -312,7 +349,10 @@ document.getElementById("period").addEventListener("change",applyFilters);
 document.getElementById("minLikes").addEventListener("input",applyFilters);
 document.getElementById("sort").addEventListener("change",applyFilters);
 document.getElementById("reload").addEventListener("click",load);
-document.getElementById("exportBtn").addEventListener("click",exportCSV);
+document.getElementById("cloudHashtags").addEventListener("change",()=>buildWordCloud(VIEW));
+document.getElementById("cloudMin").addEventListener("input",()=>buildWordCloud(VIEW));
+document.getElementById("cloudStop").addEventListener("change",()=>buildWordCloud(VIEW));
+document.getElementById("cloudReset").addEventListener("click",()=>{ACTIVE_WORD=null;applyFilters()});
 document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",e=>{
   document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
   e.currentTarget.classList.add("active");
@@ -327,4 +367,3 @@ load();
 </script>
 </body>
 </html>
-
