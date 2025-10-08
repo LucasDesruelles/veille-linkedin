@@ -6,23 +6,34 @@
 <title>Veille LinkedIn – Flux</title>
 <link href="https://unpkg.com/@picocss/pico@2.0.6/css/pico.min.css" rel="stylesheet">
 <style>
-:root{--bg:#0b0c0f;--card:#111318;--border:#1b1e25;--text:#e9ecf1;--muted:#a7b0be;--accent:#4f8cff}
-@media (prefers-color-scheme: light){:root{--bg:#f7f8fb;--card:#ffffff;--border:#e7e8ee;--text:#0d1117;--muted:#5b6472;--accent:#3b82f6}}
+:root{--bg:#0b0c0f;--card:#111318;--border:#1b1e25;--text:#e9ecf1;--muted:#a7b0be;--accent:#4f8cff;--accent2:#7aa2ff;--ok:#22c55e;--warn:#f59e0b;--danger:#ef4444}
+@media (prefers-color-scheme: light){:root{--bg:#f7f8fb;--card:#ffffff;--border:#e7e8ee;--text:#0d1117;--muted:#5b6472;--accent:#3b82f6;--accent2:#60a5fa;--ok:#16a34a;--warn:#d97706;--danger:#dc2626}}
+*{box-sizing:border-box}
 html,body{background:var(--bg);color:var(--text)}
-body{max-width:1000px;margin:auto;padding:18px}
-h2{font-weight:700;letter-spacing:.2px;margin:4px 0 12px}
-.header-sub{color:var(--muted);font-size:.95rem;margin-bottom:16px}
-.controls{position:sticky;top:0;z-index:20;display:grid;grid-template-columns:1fr 160px 160px 120px 150px 120px;gap:10px;margin:12px 0 14px;padding:12px;border:1px solid var(--border);border-radius:14px;background:color-mix(in oklab,var(--card) 88%,transparent 12%);-webkit-backdrop-filter:saturate(120%) blur(6px);backdrop-filter:saturate(120%) blur(6px)}
+body{max-width:1100px;margin:auto;padding:16px}
+.header{display:flex;align-items:center;gap:10px;justify-content:space-between;margin-bottom:8px}
+.brand{display:flex;align-items:center;gap:10px}
+.brand .dot{width:10px;height:10px;background:radial-gradient(ellipse at center,var(--accent),var(--accent2));border-radius:50%}
+.brand h1{font-size:1.1rem;margin:0;font-weight:700;letter-spacing:.3px}
+.actions-top{display:flex;gap:8px}
+.btn{border:1px solid var(--border);background:var(--card);color:var(--text);padding:8px 12px;border-radius:12px;text-decoration:none;cursor:pointer}
+.btn:hover{border-color:color-mix(in oklab,var(--accent) 40%,var(--border))}
+.btn.ghost{background:transparent}
+.controls{position:sticky;top:0;z-index:30;display:grid;grid-template-columns:1fr 160px 160px 120px 150px 110px;gap:10px;margin:10px 0 8px;padding:10px;border:1px solid var(--border);border-radius:14px;background:color-mix(in oklab,var(--card) 90%,transparent 10%);-webkit-backdrop-filter:saturate(120%) blur(6px);backdrop-filter:saturate(120%) blur(6px)}
 @media(max-width:1000px){.controls{grid-template-columns:1fr 1fr 1fr}}
-button,select,input{background:var(--card);color:var(--text);border:1px solid var(--border)}
-button:hover{border-color:color-mix(in oklab,var(--accent) 40%,var(--border))}
+.controls input,.controls select,.controls .btn{background:var(--card);color:var(--text);border:1px solid var(--border)}
 .count{color:var(--muted);font-size:.92rem;margin:6px 0 10px}
+.quick{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.chip{border:1px solid var(--border);border-radius:999px;padding:4px 10px;background:var(--card);color:var(--text);font-size:.84rem;display:flex;align-items:center;gap:6px}
+.chip .x{cursor:pointer;opacity:.8}
 .tabs{display:flex;gap:8px;margin:8px 0 14px}
 .tab{border:1px solid var(--border);background:var(--card);color:var(--text);padding:8px 12px;border-radius:12px;text-decoration:none;cursor:pointer}
 .tab.active{border-color:var(--accent);box-shadow:0 0 0 1px color-mix(in oklab,var(--accent) 40%, transparent)}
 .section{display:none}
 .section.active{display:block}
-.grid{display:grid;grid-template-columns:1fr;gap:18px}
+.viewtoggle{display:flex;gap:8px}
+.grid{display:grid;grid-template-columns:1fr;gap:16px}
+@media(min-width:900px){.grid.two{grid-template-columns:1fr 1fr}}
 .card{border:1px solid var(--border);border-radius:16px;overflow:hidden;background:var(--card);display:flex;flex-direction:column;box-shadow:0 6px 18px rgba(0,0,0,.12)}
 .head{display:flex;align-items:center;gap:12px;padding:14px 16px 8px 16px}
 .head img{width:34px;height:34px;border-radius:50%;object-fit:cover;border:1px solid var(--border)}
@@ -33,7 +44,7 @@ button:hover{border-color:color-mix(in oklab,var(--accent) 40%,var(--border))}
 .badge{font-size:.82rem;border:1px solid var(--border);border-radius:999px;padding:4px 10px;color:var(--text);background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(0,0,0,.03))}
 .badge.link a{color:var(--text);text-decoration:none}
 .badge.link a:hover{color:var(--accent)}
-.fav{cursor:pointer}
+.fav{cursor:pointer;transition:.2s}
 .embed{width:100%;aspect-ratio:16/9;background:#0f1116;border-top:1px solid var(--border)}
 .embed iframe{width:100%;height:100%;border:0;border-bottom:1px solid var(--border)}
 .fallback{padding:14px 16px;font-size:1rem;line-height:1.4;color:var(--text)}
@@ -51,50 +62,56 @@ hr.sep{border:none;border-top:1px solid var(--border);margin:0}
 .wcloud{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
 .wc{border:1px solid var(--border);border-radius:999px;padding:6px 10px;cursor:pointer;background:var(--card)}
 .wc.active{border-color:var(--accent)}
-.cloud-controls{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;align-items:center}
 .table{width:100%;border-collapse:separate;border-spacing:0;margin-top:12px}
 .table th,.table td{padding:10px;border-bottom:1px solid var(--border);text-align:left}
 .table th{color:var(--muted);font-weight:600}
+.toolbar{display:flex;align-items:center;gap:8px;justify-content:space-between;margin:8px 0 12px}
+.toast{position:fixed;right:16px;bottom:16px;background:var(--card);border:1px solid var(--border);color:var(--text);padding:10px 12px;border-radius:12px;opacity:0;transform:translateY(10px);transition:.25s}
+.toast.show{opacity:1;transform:translateY(0)}
+.skel{border:1px solid var(--border);border-radius:16px;background:var(--card);height:260px;animation:sh 1.2s infinite linear;background-image:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,.06),rgba(255,255,255,0));background-size:200% 100%}
+@keyframes sh{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.empty{border:1px dashed var(--border);border-radius:14px;padding:16px;text-align:center;color:var(--muted)}
+.topbar{display:flex;gap:10px;align-items:center}
+.key{border:1px solid var(--border);padding:2px 6px;border-radius:6px;font-size:.8rem;color:var(--muted)}
+@media (prefers-reduced-motion: reduce){.toast,.fav,.tab,.btn{transition:none}}
 </style>
 </head>
 <body>
-<h2>Veille LinkedIn</h2>
-<p class="header-sub">Dernier run Apify • filtres front • favoris • heatmap • nuage de mots propre • tableau auteurs</p>
-
-<div class="controls">
-  <input id="q" type="search" placeholder="Filtrer par mots-clés…">
-  <select id="author"><option value="">Tous auteurs</option></select>
-  <select id="period">
-    <option value="all">Toute période</option>
-    <option value="7">7 jours</option>
-    <option value="30">30 jours</option>
-    <option value="90">90 jours</option>
-  </select>
-  <input id="minLikes" type="number" min="0" value="0" placeholder="Likes min">
-  <select id="sort">
-    <option value="dateDesc">Récents → anciens</option>
-    <option value="dateAsc">Anciens → récents</option>
-    <option value="likesDesc">Likes ↓</option>
-    <option value="commentsDesc">Commentaires ↓</option>
-  </select>
-  <div style="display:flex;gap:8px;justify-content:flex-end">
-    <button id="reload">Recharger</button>
+<div class="header" role="banner">
+  <div class="brand"><span class="dot" aria-hidden="true"></span><h1>Veille LinkedIn</h1></div>
+  <div class="actions-top topbar">
+    <span class="key">/</span><span class="muted">Rechercher</span>
+    <span class="key">g</span><span class="muted">Flux</span>
+    <span class="key">i</span><span class="muted">Insights</span>
+    <span class="key">f</span><span class="muted">Favoris</span>
   </div>
 </div>
 
-<div class="tabs">
-  <button class="tab active" data-tab="feed">Flux</button>
-  <button class="tab" data-tab="insights">Insights</button>
-  <button class="tab" data-tab="favorites">Favoris</button>
+<div class="controls" role="region" aria-label="Filtres">
+  <input id="q" type="search" placeholder="Rechercher…">
+  <select id="author"><option value="">Tous auteurs</option></select>
+  <select id="period"><option value="all">Toute période</option><option value="7">7 jours</option><option value="30">30 jours</option><option value="90">90 jours</option></select>
+  <input id="minLikes" type="number" min="0" value="0" placeholder="Likes min">
+  <select id="sort"><option value="dateDesc">Récents → anciens</option><option value="dateAsc">Anciens → récents</option><option value="likesDesc">Likes ↓</option><option value="commentsDesc">Commentaires ↓</option></select>
+  <div class="viewtoggle"><button id="density" class="btn" aria-pressed="false">Vue compacte</button><button id="reload" class="btn">Recharger</button></div>
+</div>
+
+<div class="quick" id="chips"></div>
+
+<div class="tabs" role="tablist" aria-label="Sections">
+  <button class="tab active" data-tab="feed" role="tab" aria-selected="true">Flux</button>
+  <button class="tab" data-tab="insights" role="tab" aria-selected="false">Insights</button>
+  <button class="tab" data-tab="favorites" role="tab" aria-selected="false">Favoris</button>
 </div>
 
 <div class="count" id="count"></div>
 
-<section id="feed" class="section active">
+<section id="feed" class="section active" role="region" aria-label="Flux">
   <div id="grid" class="grid"></div>
+  <div id="loadMoreWrap" style="display:flex;justify-content:center;margin:14px 0"><button id="loadMore" class="btn">Voir plus</button></div>
 </section>
 
-<section id="insights" class="section">
+<section id="insights" class="section" role="region" aria-label="Insights">
   <div class="panel">
     <div class="kpis">
       <div class="kpi"><div>Total posts (filtrés)</div><div id="kpiPosts" class="v">0</div></div>
@@ -103,245 +120,66 @@ hr.sep{border:none;border-top:1px solid var(--border);margin:0}
     </div>
   </div>
   <div class="panel" style="margin-top:12px">
-    <h5>Créneaux d’engagement (heatmap des posts filtrés)</h5>
+    <h5>Créneaux d’engagement (posts filtrés)</h5>
     <table class="heat" id="heat"></table>
   </div>
   <div class="panel" style="margin-top:12px">
-    <h5>Nuage de mots clés (posts filtrés)</h5>
-    <div class="cloud-controls">
-      <label><input type="checkbox" id="cloudHashtags"> Hashtags seulement</label>
-      <label>Min occurrences <input id="cloudMin" type="number" value="2" min="1" style="width:72px"></label>
-      <input id="cloudStop" type="text" placeholder="Stopwords perso, séparés par des virgules" style="min-width:280px">
-      <button id="cloudReset">Réinitialiser filtre mot</button>
+    <div class="toolbar">
+      <h5>Nuage de mots (posts filtrés)</h5>
+      <div style="display:flex;gap:8px;align-items:center">
+        <label style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="cloudHashtags"> Hashtags seulement</label>
+        <label style="display:flex;gap:6px;align-items:center">Min occurrences <input id="cloudMin" type="number" value="2" min="1" style="width:72px"></label>
+      </div>
     </div>
+    <input id="cloudStop" type="text" placeholder="Stopwords perso, séparés par des virgules">
     <div id="wcloud" class="wcloud"></div>
   </div>
   <div class="panel" style="margin-top:12px">
-    <h5>Auteurs (sur posts filtrés)</h5>
-    <table class="table" id="authorsTbl">
-      <thead><tr><th>Auteur</th><th>Posts</th><th>Likes</th><th>Commentaires</th></tr></thead>
-      <tbody></tbody>
-    </table>
+    <h5>Auteurs (posts filtrés)</h5>
+    <table class="table" id="authorsTbl"><thead><tr><th>Auteur</th><th>Posts</th><th>Likes</th><th>Commentaires</th></tr></thead><tbody></tbody></table>
   </div>
 </section>
 
-<section id="favorites" class="section">
+<section id="favorites" class="section" role="region" aria-label="Favoris">
   <div id="favGrid" class="grid"></div>
 </section>
 
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
 <script>
 const DATA_URL="https://api.apify.com/v2/acts/supreme_coder~linkedin-post/runs/last/dataset/items?token=apify_api_KY6uoGqkXVFhCzeYBQO0OQFjnGs2RB3HzGy9";
-let RAW=[],VIEW=[],FAVS=new Set(JSON.parse(localStorage.getItem("veille_favs")||"[]")),ACTIVE_WORD=null;
+let RAW=[],VIEW=[],FAVS=new Set(JSON.parse(localStorage.getItem("veille_favs")||"[]")),ACTIVE_WORD=null,COMPACT=false,SHOW_COUNT=10;
 
-function getActivityId(item){
-  const u=item.urn||item.shareUrn||"";
-  const m1=u.match(/activity:(\d+)/);
-  if(m1)return m1[1];
-  const url=item.url||"";
-  const m2=url.match(/activity-(\d+)/)||url.match(/urn:li:activity:(\d+)/);
-  return m2?m2[1]:null;
-}
+function toast(t){const el=document.getElementById("toast");el.textContent=t;el.classList.add("show");setTimeout(()=>el.classList.remove("show"),1800)}
+function savePref(k,v){localStorage.setItem("veille_pref_"+k,JSON.stringify(v))}
+function getPref(k,def){try{return JSON.parse(localStorage.getItem("veille_pref_"+k))??def}catch(e){return def}}
 
-function mapItem(o){
-  const author=(o.author&&o.author.name)||o.authorName||"";
-  const authorLogo=(o.author&&o.author.logoUrl)||o.authorProfilePicture||"";
-  const authorUrl=(o.author&&o.author.universalName)?("https://www.linkedin.com/company/"+o.author.universalName+"/"):(o.authorProfileUrl||"");
-  const date=o.postedAtISO?new Date(o.postedAtISO):(o.postedAtTimestamp?new Date(o.postedAtTimestamp):null);
-  const likes=Number(o.numLikes||o.reactions||0);
-  const comments=Number(o.numComments||0);
-  const text=o.text||"";
-  const url=o.url||"";
-  const activityId=getActivityId(o);
-  const id=url||activityId||Math.random().toString(36).slice(2);
-  return {id,author,authorLogo,authorUrl,date,likes,comments,text,url,activityId};
-}
-
+function getActivityId(item){const u=item.urn||item.shareUrn||"";const m1=u.match(/activity:(\\d+)/);if(m1)return m1[1];const url=item.url||"";const m2=url.match(/activity-(\\d+)/)||url.match(/urn:li:activity:(\\d+)/);return m2?m2[1]:null}
+function mapItem(o){const author=(o.author&&o.author.name)||o.authorName||"";const authorLogo=(o.author&&o.author.logoUrl)||o.authorProfilePicture||"";const authorUrl=(o.author&&o.author.universalName)?("https://www.linkedin.com/company/"+o.author.universalName+"/"):(o.authorProfileUrl||"");const date=o.postedAtISO?new Date(o.postedAtISO):(o.postedAtTimestamp?new Date(o.postedAtTimestamp):null);const likes=Number(o.numLikes||o.reactions||0);const comments=Number(o.numComments||0);const text=o.text||"";const url=o.url||"";const activityId=getActivityId(o);const id=url||activityId||Math.random().toString(36).slice(2);return{id,author,authorLogo,authorUrl,date,likes,comments,text,url,activityId}}
 function uniq(a){return Array.from(new Set(a.filter(Boolean)))}
 
-function render(posts,targetId="grid"){
-  const grid=document.getElementById(targetId);
-  const count=document.getElementById("count");
-  if(targetId==="grid") count.textContent=posts.length?posts.length+" posts":"Aucun post ne correspond aux filtres";
-  grid.innerHTML="";
-  posts.forEach(p=>{
-    const card=document.createElement("article");
-    card.className="card";
-    const head=document.createElement("div");
-    head.className="head";
-    const favMark=FAVS.has(p.id)?"⭐":"☆";
-    head.innerHTML=(p.authorLogo?('<img src="'+p.authorLogo+'" alt="">'):"")+'<div class="who"><span class="name">'+(p.author||"")+'</span><span class="meta">'+(p.date?p.date.toLocaleString("fr-FR"):"")+'</span></div><span class="badge fav" data-id="'+p.id+'" style="margin-left:auto">'+favMark+'</span>';
-    card.appendChild(head);
-    const badges=document.createElement("div");
-    badges.className="badges";
-    badges.innerHTML='<span class="badge">👍 '+p.likes+'</span><span class="badge">💬 '+p.comments+'</span>'+(p.url?('<span class="badge link"><a href="'+p.url+'" target="_blank" rel="noopener">Ouvrir LinkedIn</a></span>'):"");
-    card.appendChild(badges);
-    const wrap=document.createElement("div");
-    if(p.activityId){
-      wrap.className="embed";
-      const src='https://www.linkedin.com/embed/feed/update/urn:li:activity:'+p.activityId;
-      const iframe=document.createElement("iframe");
-      iframe.src=src;iframe.allowFullscreen=true;iframe.title="LinkedIn post";
-      wrap.appendChild(iframe);
-    }else{
-      wrap.className="fallback";
-      wrap.textContent=p.text?(p.text.length>320?p.text.slice(0,320)+"…":p.text):"Aperçu indisponible";
-    }
-    card.appendChild(wrap);
-    const hr=document.createElement("hr");hr.className="sep";card.appendChild(hr);
-    const actions=document.createElement("div");actions.className="footer-actions";
-    if(p.url){const a=document.createElement("a");a.href=p.url;a.target="_blank";a.rel="noopener";a.textContent="Voir le post";actions.appendChild(a)}
-    if(p.authorUrl){const a2=document.createElement("a");a2.href=p.authorUrl;a2.target="_blank";a2.rel="noopener";a2.textContent="Voir la page";actions.appendChild(a2)}
-    card.appendChild(actions);
-    grid.appendChild(card);
-  });
-  grid.querySelectorAll(".fav").forEach(el=>{
-    el.addEventListener("click",()=>{
-      const id=el.getAttribute("data-id");
-      if(FAVS.has(id)){FAVS.delete(id);el.textContent="☆"}else{FAVS.add(id);el.textContent="⭐"}
-      localStorage.setItem("veille_favs",JSON.stringify(Array.from(FAVS)));
-      if(targetId==="favGrid") renderFavorites();
-    });
-  });
-}
+function makeCard(p){const card=document.createElement("article");card.className="card";const head=document.createElement("div");head.className="head";const favMark=FAVS.has(p.id)?"⭐":"☆";head.innerHTML=(p.authorLogo?('<img src="'+p.authorLogo+'" alt="">'):"")+'<div class="who"><span class="name">'+(p.author||"")+'</span><span class="meta">'+(p.date?p.date.toLocaleString("fr-FR"):"")+'</span></div><button class="badge fav btn" data-id="'+p.id+'" aria-pressed="'+(FAVS.has(p.id)?"true":"false")+'" style="margin-left:auto">'+favMark+'</button>';card.appendChild(head);const badges=document.createElement("div");badges.className="badges";badges.innerHTML='<span class="badge">👍 '+p.likes+'</span><span class="badge">💬 '+p.comments+'</span>'+(p.url?('<span class="badge link"><a href="'+p.url+'" target="_blank" rel="noopener">Ouvrir</a></span>'):"");card.appendChild(badges);const wrap=document.createElement("div");if(p.activityId&&!COMPACT){wrap.className="embed";const src='https://www.linkedin.com/embed/feed/update/urn:li:activity:'+p.activityId;const iframe=document.createElement("iframe");iframe.src=src;iframe.allowFullscreen=true;iframe.title="LinkedIn post";wrap.appendChild(iframe)}else{wrap.className="fallback";wrap.textContent=p.text?(p.text.length>320?p.text.slice(0,320)+"…":p.text):"Aperçu indisponible"}card.appendChild(wrap);const hr=document.createElement("hr");hr.className="sep";card.appendChild(hr);const actions=document.createElement("div");actions.className="footer-actions";if(p.url){const a=document.createElement("a");a.href=p.url;a.target="_blank";a.rel="noopener";a.textContent="Voir le post";actions.appendChild(a)}if(p.authorUrl){const a2=document.createElement("a");a2.href=p.authorUrl;a2.target="_blank";a2.rel="noopener";a2.textContent="Voir la page";actions.appendChild(a2)}if(COMPACT&&p.activityId){const a3=document.createElement("a");a3.href="#";a3.textContent="Afficher l’aperçu";a3.addEventListener("click",e=>{e.preventDefault();if(wrap.className==="fallback"){wrap.className="embed";wrap.innerHTML="";const ifr=document.createElement("iframe");ifr.src='https://www.linkedin.com/embed/feed/update/urn:li:activity:'+p.activityId;ifr.allowFullscreen=true;ifr.title="LinkedIn post";wrap.appendChild(ifr)}});actions.appendChild(a3)}card.appendChild(actions);return card}
 
-function applyFilters(){
-  const q=document.getElementById("q").value.trim().toLowerCase();
-  const author=document.getElementById("author").value;
-  const minLikes=Number(document.getElementById("minLikes").value||0);
-  const sort=document.getElementById("sort").value;
-  const period=document.getElementById("period").value;
-  const now=new Date();
-  let fromDate=null;
-  if(period!=="all"){fromDate=new Date();fromDate.setDate(now.getDate()-Number(period))}
-  let arr=RAW.slice();
-  if(fromDate) arr=arr.filter(p=>p.date && p.date>=fromDate);
-  if(q) arr=arr.filter(p=>(p.text&&p.text.toLowerCase().includes(q))||(p.author&&p.author.toLowerCase().includes(q)));
-  if(author) arr=arr.filter(p=>p.author===author);
-  if(minLikes>0) arr=arr.filter(p=>p.likes>=minLikes);
-  if(ACTIVE_WORD) arr=arr.filter(p=>(p.text||"").toLowerCase().includes(ACTIVE_WORD));
-  if(sort==="dateDesc") arr.sort((a,b)=>(b.date?.getTime()||0)-(a.date?.getTime()||0));
-  else if(sort==="dateAsc") arr.sort((a,b)=>(a.date?.getTime()||0)-(b.date?.getTime()||0));
-  else if(sort==="likesDesc") arr.sort((a,b)=>b.likes-a.likes);
-  else if(sort==="commentsDesc") arr.sort((a,b)=>b.comments-a.comments);
-  VIEW=arr;
-  render(VIEW,"grid");
-  updateInsights(VIEW);
-}
+function render(posts,targetId="grid",append=false){const grid=document.getElementById(targetId);const count=document.getElementById("count");if(targetId==="grid"){count.textContent=posts.length?posts.length+" posts":"Aucun post ne correspond aux filtres"}if(!append)grid.innerHTML="";const slice=append?posts.slice(0,SHOW_COUNT):(posts.slice(0,SHOW_COUNT));slice.forEach(p=>{grid.appendChild(makeCard(p))});const more=document.getElementById("loadMoreWrap");if(targetId==="grid"){if(posts.length>grid.children.length){more.style.display="flex"}else{more.style.display="none"}}grid.querySelectorAll(".fav").forEach(el=>{el.addEventListener("click",()=>{const id=el.getAttribute("data-id");if(FAVS.has(id)){FAVS.delete(id);el.textContent="☆";el.setAttribute("aria-pressed","false")}else{FAVS.add(id);el.textContent="⭐";el.setAttribute("aria-pressed","true")}localStorage.setItem("veille_favs",JSON.stringify(Array.from(FAVS)));if(targetId==="favGrid")renderFavorites();toast(FAVS.has(id)?"Ajouté aux favoris":"Retiré des favoris")})})}
 
-function renderFavorites(){
-  const favPosts=RAW.filter(p=>FAVS.has(p.id));
-  render(favPosts,"favGrid");
-}
+function chips(){const c=document.getElementById("chips");const q=document.getElementById("q").value.trim();const author=document.getElementById("author").value;const period=document.getElementById("period").value;const minLikes=document.getElementById("minLikes").value;const arr=[];if(q)arr.push({k:"Recherche",v:q,id:"q"});if(author)arr.push({k:"Auteur",v:author,id:"author"});if(period!=="all")arr.push({k:"Période",v:period+"j",id:"period"});if(minLikes&&Number(minLikes)>0)arr.push({k:"Likes ≥",v:minLikes,id:"minLikes"});if(ACTIVE_WORD)arr.push({k:"Mot",v:ACTIVE_WORD,id:"word"});c.innerHTML=arr.map(x=>'<span class="chip" data-id="'+x.id+'">'+x.k+': '+x.v+' <span class="x">✕</span></span>').join("");c.querySelectorAll(".chip").forEach(ch=>{ch.addEventListener("click",()=>{const id=ch.getAttribute("data-id");if(id==="q")document.getElementById("q").value="";if(id==="author")document.getElementById("author").value="";if(id==="period")document.getElementById("period").value="all";if(id==="minLikes")document.getElementById("minLikes").value="0";if(id==="word")ACTIVE_WORD=null;applyFilters();toast("Filtre retiré")})})}
 
-function tokenize(text){
-  return text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9#\s]/gi," ").split(/\s+/).filter(Boolean);
-}
+function applyFilters(){const q=document.getElementById("q").value.trim().toLowerCase();const author=document.getElementById("author").value;const minLikes=Number(document.getElementById("minLikes").value||0);const sort=document.getElementById("sort").value;const period=document.getElementById("period").value;const now=new Date();let fromDate=null;if(period!=="all"){fromDate=new Date();fromDate.setDate(now.getDate()-Number(period))}let arr=RAW.slice();if(fromDate)arr=arr.filter(p=>p.date&&p.date>=fromDate);if(q)arr=arr.filter(p=>(p.text&&p.text.toLowerCase().includes(q))||(p.author&&p.author.toLowerCase().includes(q)));if(author)arr=arr.filter(p=>p.author===author);if(minLikes>0)arr=arr.filter(p=>p.likes>=minLikes);if(ACTIVE_WORD)arr=arr.filter(p=>(p.text||"").toLowerCase().includes(ACTIVE_WORD));if(sort==="dateDesc")arr.sort((a,b)=>(b.date?.getTime()||0)-(a.date?.getTime()||0));else if(sort==="dateAsc")arr.sort((a,b)=>(a.date?.getTime()||0)-(b.date?.getTime()||0));else if(sort==="likesDesc")arr.sort((a,b)=>b.likes-a.likes);else if(sort==="commentsDesc")arr.sort((a,b)=>b.comments-a.comments);VIEW=arr;chips();render(VIEW,"grid");updateInsights(VIEW);savePref("q",q);savePref("author",author);savePref("period",period);savePref("minLikes",minLikes);savePref("sort",sort)}
 
-const STOP=new Set(["le","la","les","de","des","du","un","une","et","ou","en","au","aux","dans","pour","par","sur","avec","sans","entre","chez","vers","sous","sur","ce","cet","cette","cela","ça","cette","ces","son","sa","ses","leur","leurs","notre","vos","votre","nos","plus","moins","tres","est","sont","ete","etre","ete","serai","sera","seront","etre","que","qui","quoi","quand","ou","a","à","d","l","je","tu","il","elle","on","nous","vous","ils","elles","me","te","se","y","en","ne","pas","ni","car","donc","or","mais","si","comme","afin","alors","ainsi","apres","avant","depuis","pendant","toujours","jamais","tout","toute","tous","toutes","dont","aujourd","hui","the","and","of","to","in","is","are","be","have","has","had","do","did","rt","via","very","plus","moins","encore","tres","trop","bien","mal","bon","bonne","aussi","ailleurs","quel","quelle","quels","quelles","cet","cette","ceci","cela","dont","car","afin","des","du","aux","au"]);
-const COMMON_VERBS=new Set(["etre","avoir","aller","faire","pouvoir","devoir","mettre","dire","voir","savoir","venir","falloir","parler","prendre","donner","trouver","comprendre","poser","lancer","developper","partager","decouvrir","rejoindre","lire"]);
+function renderFavorites(){const favPosts=RAW.filter(p=>FAVS.has(p.id));render(favPosts,"favGrid")}
+function tokenize(text){return text.toLowerCase().normalize("NFD").replace(/[\\u0300-\\u036f]/g,"").replace(/[^a-z0-9#\\s]/gi," ").split(/\\s+/).filter(Boolean)}
+const STOP=new Set(["le","la","les","de","des","du","un","une","et","ou","en","au","aux","dans","pour","par","sur","avec","sans","entre","chez","vers","sous","ce","cet","cette","cela","ca","ces","son","sa","ses","leur","leurs","notre","vos","votre","nos","plus","moins","tres","est","sont","ete","etre","sera","seront","que","qui","quoi","quand","ou","a","d","l","je","tu","il","elle","on","nous","vous","ils","elles","me","te","se","y","ne","pas","ni","car","donc","or","mais","si","comme","afin","alors","ainsi","apres","avant","depuis","pendant","toujours","jamais","tout","toute","tous","toutes","dont","the","and","of","to","in","is","are","be","have","has","had","do","did","rt","via","very","encore","trop","bien","mal","bon","bonne","aussi","quel","quelle","quels","quelles"])
+const VERBS=new Set(["etre","avoir","aller","faire","pouvoir","devoir","mettre","dire","voir","savoir","venir","falloir","parler","prendre","donner","trouver","comprendre","poser","lancer","developper","partager","decouvrir","rejoindre","lire","aimer","suivre"])
+function buildWordCloud(posts){const onlyHashtags=document.getElementById("cloudHashtags").checked;const minOcc=Math.max(1,parseInt(document.getElementById("cloudMin").value||"2",10));const custom=document.getElementById("cloudStop").value.toLowerCase().split(",").map(s=>s.trim()).filter(Boolean);const STOP_ALL=new Set([...STOP,...VERBS,...custom]);const freq=new Map(),df=new Map();const N=posts.length||1;posts.forEach(p=>{const seen=new Set();const words=tokenize(p.text||"");words.forEach(w=>{const isHash=w.startsWith("#");const core=isHash?w.slice(1):w;if(onlyHashtags&&!isHash)return;if(core.length<4&&!isHash)return;if(STOP_ALL.has(core))return;if(/^\\d+$/.test(core))return;const token=isHash?("#"+core):core;freq.set(token,(freq.get(token)||0)+1);if(!seen.has(token)){df.set(token,(df.get(token)||0)+1);seen.add(token)}})});const scored=Array.from(freq.entries()).map(([w,f])=>{const d=df.get(w)||1;const idf=Math.log((N+1)/(d));return{w,f,score:f*idf}}).filter(x=>x.f>=minOcc).sort((a,b)=>b.score-a.score).slice(0,40);const wc=document.getElementById("wcloud");wc.innerHTML=scored.map(x=>`<button class="wc${ACTIVE_WORD===x.w?' active':''}" data-w="${x.w}">${x.w} (${x.f})</button>`).join("");wc.querySelectorAll(".wc").forEach(b=>{b.addEventListener("click",()=>{const w=b.getAttribute("data-w");if(ACTIVE_WORD===w){ACTIVE_WORD=null}else{ACTIVE_WORD=w.toLowerCase()}applyFilters();toast(ACTIVE_WORD?("Filtré: "+ACTIVE_WORD):"Filtre mot retiré")})})}
+function buildHeatmap(posts){const table=document.getElementById("heat");const days=["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"];const hours=[8,10,12,14,16,18,20];const grid=[];for(let d=0;d<7;d++){grid[d]=[];for(let h=0;h<hours.length;h++)grid[d][h]=0}posts.forEach(p=>{if(!p.date)return;const d=(p.date.getDay()+6)%7;const hr=p.date.getHours();let idx=hours.findIndex(x=>hr<=x);if(idx<0)idx=hours.length-1;grid[d][idx]+=p.likes+p.comments});let html="<tr><th></th>"+hours.map(h=>`<th>${h}h</th>`).join("")+"</tr>";const flat=grid.flat();const max=Math.max(1,...flat);for(let d=0;d<7;d++){html+=`<tr><th>${days[d]}</th>`+grid[d].map(v=>{const pct=v/max;const bg=`rgba(79,140,255,${0.15+0.65*pct})`;return `<td style="background:${bg}">${v}</td>`}).join("")+`</tr>`}table.innerHTML=html}
+function buildAuthorsTable(posts){const agg=new Map();posts.forEach(p=>{const key=p.author||"Inconnu";const a=agg.get(key)||{posts:0,likes:0,comments:0};a.posts+=1;a.likes+=p.likes;a.comments+=p.comments;agg.set(key,a)});const rows=Array.from(agg.entries()).map(([name,a])=>({name,...a})).sort((x,y)=>y.likes-x.likes);const tbody=document.querySelector("#authorsTbl tbody");tbody.innerHTML=rows.map(r=>`<tr><td>${r.name}</td><td>${r.posts}</td><td>${r.likes}</td><td>${r.comments}</td></tr>`).join("")}
+function updateInsights(posts){const likes=posts.reduce((s,p)=>s+p.likes,0);const comments=posts.reduce((s,p)=>s+p.comments,0);document.getElementById("kpiPosts").textContent=posts.length;document.getElementById("kpiLikes").textContent=likes;document.getElementById("kpiComments").textContent=comments;buildHeatmap(posts);buildWordCloud(posts);buildAuthorsTable(posts)}
 
-function buildWordCloud(posts){
-  const onlyHashtags=document.getElementById("cloudHashtags").checked;
-  const minOcc=Math.max(1,parseInt(document.getElementById("cloudMin").value||"2",10));
-  const custom=document.getElementById("cloudStop").value.toLowerCase().split(",").map(s=>s.trim()).filter(Boolean);
-  const STOP_ALL=new Set([...STOP, ...COMMON_VERBS, ...custom]);
+function skeleton(n=6){const grid=document.getElementById("grid");grid.innerHTML="";for(let i=0;i<n;i++){const d=document.createElement("div");d.className="skel";grid.appendChild(d)}document.getElementById("loadMoreWrap").style.display="none"}
+async function load(){skeleton();const res=await fetch(DATA_URL,{cache:"no-store"});const data=await res.json();const list=Array.isArray(data)?data:(Array.isArray(data.items)?data.items:[]);RAW=list.map(mapItem);const authors=uniq(RAW.map(p=>p.author)).sort((a,b)=>a.localeCompare(b,"fr"));const sel=document.getElementById("author");sel.innerHTML='<option value="">Tous auteurs</option>'+authors.map(a=>'<option value="'+a+'">'+a+'</option>').join("");restorePrefs();applyFilters();renderFavorites();toast("Données chargées")}
+function renderMore(){const grid=document.getElementById("grid");const already=grid.children.length;const remaining=VIEW.slice(already,already+SHOW_COUNT);remaining.forEach(p=>grid.appendChild(makeCard(p)));if(VIEW.length<=grid.children.length){document.getElementById("loadMoreWrap").style.display="none"}}
 
-  const freq=new Map(), df=new Map();
-  const N=posts.length||1;
-  posts.forEach(p=>{
-    const seen=new Set();
-    const words=tokenize(p.text||"");
-    words.forEach(w=>{
-      const isHashtag=w.startsWith("#");
-      const core=isHashtag?w.slice(1):w;
-      if(onlyHashtags && !isHashtag) return;
-      if(core.length<4 && !isHashtag) return;
-      if(STOP_ALL.has(core)) return;
-      if(/^\d+$/.test(core)) return;
-      const token=isHashtag?("#"+core):core;
-      freq.set(token,(freq.get(token)||0)+1);
-      if(!seen.has(token)){ df.set(token,(df.get(token)||0)+1); seen.add(token); }
-    });
-  });
-
-  const scored=Array.from(freq.entries()).map(([w,f])=>{
-    const d=df.get(w)||1;
-    const idf=Math.log((N+1)/(d));
-    const score=f*idf;
-    return {w,f,score};
-  }).filter(x=>x.f>=minOcc).sort((a,b)=>b.score-a.score).slice(0,40);
-
-  const wc=document.getElementById("wcloud");
-  wc.innerHTML=scored.map(x=>`<button class="wc${ACTIVE_WORD===x.w?' active':''}" data-w="${x.w}">${x.w} (${x.f})</button>`).join("");
-  wc.querySelectorAll(".wc").forEach(b=>{
-    b.addEventListener("click",()=>{
-      const w=b.getAttribute("data-w");
-      if(ACTIVE_WORD===w){ACTIVE_WORD=null}else{ACTIVE_WORD=w.toLowerCase()}
-      applyFilters();
-    });
-  });
-}
-
-function buildHeatmap(posts){
-  const table=document.getElementById("heat");
-  const days=["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"];
-  const hours=[8,10,12,14,16,18,20];
-  const grid=[];
-  for(let d=0;d<7;d++){grid[d]=[];for(let h=0;h<hours.length;h++)grid[d][h]=0}
-  posts.forEach(p=>{
-    if(!p.date)return;
-    const d=(p.date.getDay()+6)%7;
-    const hr=p.date.getHours();
-    let idx=hours.findIndex(x=>hr<=x);
-    if(idx<0) idx=hours.length-1;
-    grid[d][idx]+=p.likes+p.comments;
-  });
-  let html="<tr><th></th>"+hours.map(h=>`<th>${h}h</th>`).join("")+"</tr>";
-  const flat=grid.flat();const max=Math.max(1,...flat);
-  for(let d=0;d<7;d++){
-    html+=`<tr><th>${days[d]}</th>`+grid[d].map(v=>{
-      const pct=v/max;const bg=`rgba(79,140,255,${0.15+0.65*pct})`;
-      return `<td style="background:${bg}">${v}</td>`;
-    }).join("")+`</tr>`;
-  }
-  table.innerHTML=html;
-}
-
-function buildAuthorsTable(posts){
-  const agg=new Map();
-  posts.forEach(p=>{
-    const key=p.author||"Inconnu";
-    const a=agg.get(key)||{posts:0,likes:0,comments:0};
-    a.posts+=1; a.likes+=p.likes; a.comments+=p.comments;
-    agg.set(key,a);
-  });
-  const rows=Array.from(agg.entries()).map(([name,a])=>({name,...a})).sort((x,y)=>y.likes-x.likes);
-  const tbody=document.querySelector("#authorsTbl tbody");
-  tbody.innerHTML=rows.map(r=>`<tr><td>${r.name}</td><td>${r.posts}</td><td>${r.likes}</td><td>${r.comments}</td></tr>`).join("");
-}
-
-function updateInsights(posts){
-  const likes=posts.reduce((s,p)=>s+p.likes,0);
-  const comments=posts.reduce((s,p)=>s+p.comments,0);
-  document.getElementById("kpiPosts").textContent=posts.length;
-  document.getElementById("kpiLikes").textContent=likes;
-  document.getElementById("kpiComments").textContent=comments;
-  buildHeatmap(posts);
-  buildWordCloud(posts);
-  buildAuthorsTable(posts);
-}
-
-async function load(){
-  const res=await fetch(DATA_URL,{cache:"no-store"});
-  const data=await res.json();
-  const list=Array.isArray(data)?data:(Array.isArray(data.items)?data.items:[]);
-  RAW=list.map(mapItem);
-  const authors=uniq(RAW.map(p=>p.author)).sort((a,b)=>a.localeCompare(b,"fr"));
-  const sel=document.getElementById("author");
-  sel.innerHTML='<option value="">Tous auteurs</option>'+authors.map(a=>'<option value="'+a+'">'+a+'</option>').join("");
-  applyFilters();
-  renderFavorites();
-}
+function restorePrefs(){document.getElementById("q").value=getPref("q","");document.getElementById("author").value=getPref("author","");document.getElementById("period").value=getPref("period","all");document.getElementById("minLikes").value=getPref("minLikes",0);document.getElementById("sort").value=getPref("sort","dateDesc");COMPACT=getPref("compact",false);document.getElementById("density").setAttribute("aria-pressed",COMPACT?"true":"false");document.getElementById("density").textContent=COMPACT?"Vue complète":"Vue compacte";document.getElementById("grid").classList.toggle("two",getPref("twoCols",false))}
 
 document.getElementById("q").addEventListener("input",applyFilters);
 document.getElementById("author").addEventListener("change",applyFilters);
@@ -352,16 +190,13 @@ document.getElementById("reload").addEventListener("click",load);
 document.getElementById("cloudHashtags").addEventListener("change",()=>buildWordCloud(VIEW));
 document.getElementById("cloudMin").addEventListener("input",()=>buildWordCloud(VIEW));
 document.getElementById("cloudStop").addEventListener("change",()=>buildWordCloud(VIEW));
-document.getElementById("cloudReset").addEventListener("click",()=>{ACTIVE_WORD=null;applyFilters()});
-document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",e=>{
-  document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
-  e.currentTarget.classList.add("active");
-  const tab=e.currentTarget.getAttribute("data-tab");
-  document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
-  document.getElementById(tab).classList.add("active");
-  if(tab==="favorites") renderFavorites();
-  if(tab==="insights") updateInsights(VIEW);
-}));
+document.getElementById("loadMore").addEventListener("click",renderMore);
+
+document.getElementById("density").addEventListener("click",()=>{COMPACT=!COMPACT;savePref("compact",COMPACT);document.getElementById("density").setAttribute("aria-pressed",COMPACT?"true":"false");document.getElementById("density").textContent=COMPACT?"Vue complète":"Vue compacte";applyFilters();toast(COMPACT?"Mode compact":"Mode complet")});
+
+document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",e=>{document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));e.currentTarget.classList.add("active");const tab=e.currentTarget.getAttribute("data-tab");document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));document.getElementById(tab).classList.add("active");if(tab==="favorites")renderFavorites();if(tab==="insights")updateInsights(VIEW)}));
+
+document.addEventListener("keydown",(e)=>{if(e.key==="/"){e.preventDefault();document.getElementById("q").focus()}if(e.key==="g"){document.querySelector('.tab[data-tab="feed"]').click()}if(e.key==="i"){document.querySelector('.tab[data-tab="insights"]').click()}if(e.key==="f"){document.querySelector('.tab[data-tab="favorites"]').click()}if(e.key==="r"){document.getElementById("reload").click()}});
 
 load();
 </script>
