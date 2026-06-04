@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="fr">
 <head>
@@ -422,6 +421,9 @@ hr.sep{border:none;border-top:1px solid var(--border)}
     <button class="tab-btn" data-tab="favorites">
       Favoris <span id="favCount" style="font-size:.72rem;color:var(--muted);font-family:var(--font-mono)"></span>
     </button>
+    <button class="tab-btn" data-tab="sync">
+      ⚙ Sync <span id="syncDot" style="width:6px;height:6px;border-radius:50%;background:var(--green);display:none;margin-left:4px;vertical-align:middle"></span>
+    </button>
     <div class="topbar-right">
       <span class="count-badge" id="countBadge">—</span>
       <div class="view-toggle">
@@ -504,6 +506,82 @@ hr.sep{border:none;border-top:1px solid var(--border)}
       </div>
     </section>
 
+    <!-- SYNC -->
+    <section id="sync" class="section">
+      <div style="max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:14px">
+
+        <!-- config card -->
+        <div class="panel">
+          <div class="panel-title">Configuration Apify</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+            <div>
+              <div style="font-size:.75rem;color:var(--muted);margin-bottom:5px">Token Apify</div>
+              <input id="cfgToken" class="sb-input" type="password" placeholder="apify_api_XXXX…" style="width:100%">
+            </div>
+            <div>
+              <div style="font-size:.75rem;color:var(--muted);margin-bottom:5px">ID de l'acteur</div>
+              <input id="cfgActor" class="sb-input" type="text" placeholder="apimaestro~linkedin-profile-posts" style="width:100%">
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+            <div>
+              <div style="font-size:.75rem;color:var(--muted);margin-bottom:5px">Posts max par profil</div>
+              <input id="cfgLimit" class="sb-input" type="number" value="15" min="1" max="100" style="width:100%">
+            </div>
+            <div>
+              <div style="font-size:.75rem;color:var(--muted);margin-bottom:5px">Fréquence auto</div>
+              <select id="cfgFreq" class="sb-select" style="width:100%">
+                <option value="48">Toutes les 48h</option>
+                <option value="24">Toutes les 24h</option>
+                <option value="72">Toutes les 72h</option>
+                <option value="0">Manuel uniquement</option>
+              </select>
+            </div>
+          </div>
+          <button class="btn" id="cfgSaveBtn" style="font-size:.83rem">Sauvegarder la configuration</button>
+        </div>
+
+        <!-- profiles card -->
+        <div class="panel">
+          <div class="panel-title">Profils à scraper <span id="profileCount" style="font-weight:400;color:var(--muted)"></span></div>
+          <div style="font-size:.75rem;color:var(--muted);margin-bottom:8px">Une URL LinkedIn par ligne (company ou in/)</div>
+          <textarea id="cfgProfiles" class="sb-input" rows="12" style="width:100%;font-family:var(--font-mono);font-size:.75rem;resize:vertical;line-height:1.6"></textarea>
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <button class="btn ghost" id="profileSaveBtn" style="font-size:.8rem">Sauvegarder les profils</button>
+            <button class="btn ghost" id="profileResetBtn" style="font-size:.8rem">Restaurer la liste par défaut</button>
+          </div>
+        </div>
+
+        <!-- status & run card -->
+        <div class="panel">
+          <div class="panel-title">Statut de la synchronisation</div>
+          <div id="syncStatus" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px">
+            <div class="kpi-card"><div class="kpi-label">Dernier run</div><div id="stLastRun" class="kpi-val" style="font-size:1rem">—</div></div>
+            <div class="kpi-card"><div class="kpi-label">Prochain run auto</div><div id="stNextRun" class="kpi-val" style="font-size:1rem">—</div></div>
+            <div class="kpi-card"><div class="kpi-label">Posts collectés</div><div id="stPostsTotal" class="kpi-val" style="font-size:1rem">—</div></div>
+          </div>
+
+          <!-- progress -->
+          <div id="syncProgress" style="display:none;margin-bottom:14px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+              <span style="font-size:.82rem;font-weight:500" id="syncProgressLabel">Synchronisation en cours…</span>
+              <span style="font-family:var(--font-mono);font-size:.78rem;color:var(--muted)" id="syncProgressPct">0%</span>
+            </div>
+            <div style="height:6px;background:var(--surface2);border-radius:999px;overflow:hidden">
+              <div id="syncProgressBar" style="height:100%;width:0%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:999px;transition:width .3s"></div>
+            </div>
+            <div id="syncLog" style="margin-top:10px;max-height:160px;overflow-y:auto;font-family:var(--font-mono);font-size:.72rem;color:var(--muted);display:flex;flex-direction:column;gap:3px"></div>
+          </div>
+
+          <div style="display:flex;gap:8px">
+            <button class="btn" id="syncNowBtn" style="font-size:.85rem">▶ Lancer la sync maintenant</button>
+            <button class="btn ghost" id="syncStopBtn" style="font-size:.85rem;display:none">⏹ Arrêter</button>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
   </div>
 </div>
 
@@ -533,15 +611,314 @@ hr.sep{border:none;border-top:1px solid var(--border)}
 /* ═══════════════════════════════════════════════════════════
    DATA
 ═══════════════════════════════════════════════════════════ */
-const DATA_URL = "https://api.apify.com/v2/datasets/9I6WkcYHKwChtzmIk/items?token=apify_api_KY6uoGqkXVFhCzeYBQO0OQFjnGs2RB3HzGy9";
+/* ═══════════════════════════════════════════════════════════
+   DEFAULT PROFILES LIST
+═══════════════════════════════════════════════════════════ */
+const DEFAULT_PROFILES = [
+  "https://www.linkedin.com/company/neoen",
+  "https://www.linkedin.com/company/edf-renouvelables",
+  "https://www.linkedin.com/company/engie-green",
+  "https://www.linkedin.com/company/totalenergies",
+  "https://www.linkedin.com/company/groupe-valeco",
+  "https://www.linkedin.com/company/voltalia",
+  "https://www.linkedin.com/company/valorem_2",
+  "https://www.linkedin.com/company/boralex",
+  "https://www.linkedin.com/company/cve-energie",
+  "https://www.linkedin.com/company/technique-solaire",
+  "https://www.linkedin.com/company/akuo-energy",
+  "https://www.linkedin.com/company/bwre-emea",
+  "https://www.linkedin.com/company/tenergie",
+  "https://www.linkedin.com/company/amarenco",
+  "https://www.linkedin.com/company/syndicat-des-energies-renouvelables",
+  "https://www.linkedin.com/company/france-renouvelables",
+  "https://www.linkedin.com/company/ademe",
+  "https://www.linkedin.com/company/rte-france",
+  "https://www.linkedin.com/company/banque-des-territoires",
+  "https://www.linkedin.com/company/greenunivers",
+  "https://www.linkedin.com/company/revolution-energetique",
+  "https://www.linkedin.com/company/finergreen",
+  "https://www.linkedin.com/company/vert-eco",
+  "https://www.linkedin.com/company/mirova",
+  "https://www.linkedin.com/company/meridiam",
+  "https://www.linkedin.com/company/ardian",
+  "https://www.linkedin.com/company/ministere-transition-ecologique",
+  "https://www.linkedin.com/company/rpglobal",
+  "https://www.linkedin.com/in/jean-marc-jancovici-a9b5b",
+  "https://www.linkedin.com/in/jules-nyssen",
+  "https://www.linkedin.com/in/carole-mathieu-8b9b8266",
+  "https://www.linkedin.com/in/elsa-bembaron",
+  "https://www.linkedin.com/in/julie-laernoes-755741b3",
+  "https://www.linkedin.com/in/olga-givernet"
+];
 
 let RAW = [], VIEW = [];
 let FAVS = new Set(JSON.parse(localStorage.getItem("vl_favs") || "[]"));
 let NOTES = JSON.parse(localStorage.getItem("vl_notes") || "{}");
 let SAVED_VIEWS = JSON.parse(localStorage.getItem("vl_views") || "[]");
-let VIEW_MODE = "card"; // card | list | 2col
+let VIEW_MODE = "card";
 let ACTIVE_WORD = null;
 let DIGEST_FMT = "markdown";
+let SYNC_STOP = false;
+
+/* ═══════════════════════════════════════════════════════════
+   SYNC CONFIG
+═══════════════════════════════════════════════════════════ */
+function getSyncConfig() {
+  return {
+    token: localStorage.getItem("vl_apify_token") || "",
+    actor: localStorage.getItem("vl_apify_actor") || "apimaestro~linkedin-profile-posts-scraper",
+    limit: parseInt(localStorage.getItem("vl_apify_limit") || "15"),
+    freq: parseInt(localStorage.getItem("vl_apify_freq") || "48"),
+    profiles: JSON.parse(localStorage.getItem("vl_profiles") || JSON.stringify(DEFAULT_PROFILES)),
+    lastRun: parseInt(localStorage.getItem("vl_last_run") || "0"),
+    cachedPosts: JSON.parse(localStorage.getItem("vl_cached_posts") || "[]"),
+  };
+}
+
+function saveSyncConfig(cfg) {
+  if (cfg.token !== undefined) localStorage.setItem("vl_apify_token", cfg.token);
+  if (cfg.actor !== undefined) localStorage.setItem("vl_apify_actor", cfg.actor);
+  if (cfg.limit !== undefined) localStorage.setItem("vl_apify_limit", cfg.limit);
+  if (cfg.freq !== undefined) localStorage.setItem("vl_apify_freq", cfg.freq);
+  if (cfg.profiles !== undefined) localStorage.setItem("vl_profiles", JSON.stringify(cfg.profiles));
+  if (cfg.lastRun !== undefined) localStorage.setItem("vl_last_run", cfg.lastRun);
+  if (cfg.cachedPosts !== undefined) localStorage.setItem("vl_cached_posts", JSON.stringify(cfg.cachedPosts));
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SYNC ENGINE
+═══════════════════════════════════════════════════════════ */
+function syncLog(msg, type = "info") {
+  const log = document.getElementById("syncLog");
+  if (!log) return;
+  const colors = { info: "var(--muted)", ok: "var(--green)", err: "var(--red)", warn: "var(--amber)" };
+  const icons = { info: "→", ok: "✓", err: "✗", warn: "⚠" };
+  const el = document.createElement("div");
+  el.style.color = colors[type] || colors.info;
+  el.textContent = `${icons[type]} ${msg}`;
+  log.appendChild(el);
+  log.scrollTop = log.scrollHeight;
+}
+
+function syncProgress(current, total, label) {
+  const pct = total > 0 ? Math.round((current / total) * 100) : 0;
+  document.getElementById("syncProgressBar").style.width = pct + "%";
+  document.getElementById("syncProgressPct").textContent = pct + "%";
+  document.getElementById("syncProgressLabel").textContent = label || "Synchronisation…";
+}
+
+function mapApifyPost(o, profileUrl) {
+  // Handle apimaestro format
+  const author = o.author
+    ? ((o.author.first_name || "") + " " + (o.author.last_name || "")).trim() || o.author.username || o.author.name || ""
+    : o.authorName || "";
+  const authorLogo = (o.author && o.author.profile_picture) || o.authorProfilePicture || "";
+  const authorUrl = (o.author && o.author.profile_url) || o.authorProfileUrl || profileUrl || "";
+  const text = o.text || (o.content && o.content.text) || o.postText || "";
+  const url = o.url || o.postUrl || "";
+  const rawDate = o.posted_at
+    ? (o.posted_at.timestamp ? new Date(o.posted_at.timestamp) : new Date(o.posted_at.date || o.posted_at))
+    : (o.postedAtISO ? new Date(o.postedAtISO) : (o.postedAtTimestamp ? new Date(o.postedAtTimestamp) : null));
+  const likes = o.stats
+    ? (o.stats.total_reactions || o.stats.like || 0)
+    : Number(o.numLikes || o.reactions || 0);
+  const comments = o.stats
+    ? (o.stats.comments || 0)
+    : Number(o.numComments || 0);
+  const actId = (o.urn || o.activityId || "").replace(/[^\d]/g, "") || (url.match(/activity[:-](\d+)/)||[])[1] || null;
+  const id = url || actId || Math.random().toString(36).slice(2);
+  const engagement = likes + comments;
+  const ageDays = rawDate ? Math.max(1, (Date.now() - rawDate.getTime()) / 86400000) : 999;
+  const viralScore = Math.round((engagement / ageDays) * 10) / 10;
+  return { id, author, authorLogo, authorUrl, date: rawDate, likes, comments, text, url, activityId: actId, engagement, viralScore };
+}
+
+async function runApifyActor(token, actorId, input) {
+  // 1. Start the run
+  const runRes = await fetch(`https://api.apify.com/v2/acts/${actorId}/runs?token=${token}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input)
+  });
+  if (!runRes.ok) throw new Error(`Start failed: ${runRes.status}`);
+  const runData = await runRes.json();
+  const runId = runData.data && runData.data.id;
+  if (!runId) throw new Error("No run ID returned");
+
+  // 2. Poll until finished (max 3 min)
+  const maxWait = 180000;
+  const start = Date.now();
+  let status = "RUNNING";
+  while (status === "RUNNING" || status === "READY" || status === "ABORTING") {
+    if (SYNC_STOP) throw new Error("STOPPED");
+    if (Date.now() - start > maxWait) throw new Error("Timeout après 3 min");
+    await new Promise(r => setTimeout(r, 4000));
+    const statusRes = await fetch(`https://api.apify.com/v2/actor-runs/${runId}?token=${token}`);
+    const statusData = await statusRes.json();
+    status = statusData.data && statusData.data.status;
+  }
+  if (status !== "SUCCEEDED") throw new Error(`Run ${status}`);
+
+  // 3. Get dataset items
+  const dataRes = await fetch(`https://api.apify.com/v2/actor-runs/${runId}/dataset/items?token=${token}`);
+  if (!dataRes.ok) throw new Error(`Dataset fetch failed: ${dataRes.status}`);
+  const items = await dataRes.json();
+  // Handle nested data.posts format
+  if (Array.isArray(items)) return items;
+  if (items.data && Array.isArray(items.data.posts)) return items.data.posts;
+  if (items.data && Array.isArray(items.data)) return items.data;
+  return [];
+}
+
+async function runSync() {
+  const cfg = getSyncConfig();
+  if (!cfg.token) { alert("Configure d'abord ton token Apify dans l'onglet Sync."); return; }
+  if (!cfg.profiles.length) { alert("Aucun profil configuré."); return; }
+
+  SYNC_STOP = false;
+  const progressWrap = document.getElementById("syncProgress");
+  progressWrap.style.display = "block";
+  document.getElementById("syncNowBtn").style.display = "none";
+  document.getElementById("syncStopBtn").style.display = "inline-flex";
+  document.getElementById("syncLog").innerHTML = "";
+
+  const allPosts = [];
+  const total = cfg.profiles.length;
+
+  for (let i = 0; i < total; i++) {
+    if (SYNC_STOP) { syncLog("Sync interrompue.", "warn"); break; }
+    const profileUrl = cfg.profiles[i];
+    const slug = profileUrl.replace(/.*linkedin\.com\/(company|in)\//, "").replace(/\/$/, "");
+    syncProgress(i, total, `(${i+1}/${total}) ${slug}`);
+    syncLog(`Scraping ${slug}…`);
+
+    try {
+      const input = { profileUrl, maxPosts: cfg.limit };
+      const items = await runApifyActor(cfg.token, cfg.actor, input);
+      const mapped = items.map(it => mapApifyPost(it, profileUrl));
+      allPosts.push(...mapped);
+      syncLog(`${slug} → ${mapped.length} posts`, "ok");
+    } catch (e) {
+      if (e.message === "STOPPED") break;
+      syncLog(`${slug} → erreur: ${e.message}`, "err");
+    }
+  }
+
+  syncProgress(total, total, "Terminé !");
+
+  // Merge with existing cached posts, deduplicate by id
+  const existing = cfg.cachedPosts || [];
+  const merged = [...allPosts, ...existing];
+  const seen = new Set();
+  const deduped = merged.filter(p => { if (seen.has(p.id)) return false; seen.add(p.id); return true; });
+  // Keep only last 60 days
+  const cutoff = Date.now() - 60 * 86400000;
+  const fresh = deduped.filter(p => !p.date || new Date(p.date).getTime() > cutoff);
+
+  saveSyncConfig({ cachedPosts: fresh, lastRun: Date.now() });
+  syncLog(`✓ ${allPosts.length} nouveaux posts — ${fresh.length} au total en cache`, "ok");
+
+  document.getElementById("syncNowBtn").style.display = "inline-flex";
+  document.getElementById("syncStopBtn").style.display = "none";
+
+  // Load into view
+  loadFromCache();
+  updateSyncStatus();
+}
+
+function loadFromCache() {
+  const cfg = getSyncConfig();
+  if (!cfg.cachedPosts.length) return;
+  // Re-hydrate dates
+  RAW = cfg.cachedPosts.map(p => ({ ...p, date: p.date ? new Date(p.date) : null }));
+  const authors = uniq(RAW.map(p => p.author)).sort((a, b) => a.localeCompare(b, "fr"));
+  const sel = document.getElementById("author");
+  sel.innerHTML = '<option value="">Tous les auteurs</option>' + authors.map(a => `<option value="${a}">${a}</option>`).join("");
+  applyFilters();
+  updateFavCount();
+  renderSavedViews();
+}
+
+function updateSyncStatus() {
+  const cfg = getSyncConfig();
+  const lastRun = cfg.lastRun;
+  const freq = cfg.freq;
+  document.getElementById("stLastRun").textContent = lastRun
+    ? new Date(lastRun).toLocaleString("fr-FR", { day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit" })
+    : "Jamais";
+  if (freq > 0 && lastRun) {
+    const next = new Date(lastRun + freq * 3600000);
+    document.getElementById("stNextRun").textContent = next.toLocaleString("fr-FR", { day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit" });
+  } else {
+    document.getElementById("stNextRun").textContent = freq > 0 ? "Après 1er run" : "Manuel";
+  }
+  document.getElementById("stPostsTotal").textContent = cfg.cachedPosts.length || "0";
+}
+
+function initSyncScheduler() {
+  // Check every minute if auto-sync is needed
+  setInterval(() => {
+    const cfg = getSyncConfig();
+    if (!cfg.freq || !cfg.token) return;
+    const elapsed = (Date.now() - cfg.lastRun) / 3600000;
+    if (elapsed >= cfg.freq) {
+      syncLog("Auto-sync déclenchée (scheduler)…", "info");
+      runSync();
+    }
+  }, 60000);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SYNC UI INIT
+═══════════════════════════════════════════════════════════ */
+function initSyncUI() {
+  const cfg = getSyncConfig();
+  document.getElementById("cfgToken").value = cfg.token || "";
+  document.getElementById("cfgActor").value = cfg.actor || "";
+  document.getElementById("cfgLimit").value = cfg.limit || 15;
+  document.getElementById("cfgFreq").value = cfg.freq || 48;
+  const profilesTA = document.getElementById("cfgProfiles");
+  profilesTA.value = cfg.profiles.join("\n");
+  document.getElementById("profileCount").textContent = `(${cfg.profiles.length} profils)`;
+
+  profilesTA.addEventListener("input", () => {
+    const count = profilesTA.value.split("\n").filter(l => l.trim()).length;
+    document.getElementById("profileCount").textContent = `(${count} profils)`;
+  });
+
+  document.getElementById("cfgSaveBtn").addEventListener("click", () => {
+    saveSyncConfig({
+      token: document.getElementById("cfgToken").value.trim(),
+      actor: document.getElementById("cfgActor").value.trim(),
+      limit: parseInt(document.getElementById("cfgLimit").value),
+      freq: parseInt(document.getElementById("cfgFreq").value),
+    });
+    const btn = document.getElementById("cfgSaveBtn");
+    btn.textContent = "✓ Sauvegardé !";
+    setTimeout(() => btn.textContent = "Sauvegarder la configuration", 1500);
+  });
+
+  document.getElementById("profileSaveBtn").addEventListener("click", () => {
+    const profiles = document.getElementById("cfgProfiles").value.split("\n").map(l => l.trim()).filter(Boolean);
+    saveSyncConfig({ profiles });
+    const btn = document.getElementById("profileSaveBtn");
+    btn.textContent = "✓ Sauvegardé !";
+    setTimeout(() => btn.textContent = "Sauvegarder les profils", 1500);
+  });
+
+  document.getElementById("profileResetBtn").addEventListener("click", () => {
+    if (!confirm("Restaurer la liste par défaut ? Les modifications seront perdues.")) return;
+    saveSyncConfig({ profiles: DEFAULT_PROFILES });
+    document.getElementById("cfgProfiles").value = DEFAULT_PROFILES.join("\n");
+    document.getElementById("profileCount").textContent = `(${DEFAULT_PROFILES.length} profils)`;
+  });
+
+  document.getElementById("syncNowBtn").addEventListener("click", runSync);
+  document.getElementById("syncStopBtn").addEventListener("click", () => { SYNC_STOP = true; });
+
+  updateSyncStatus();
+  initSyncScheduler();
+}
 
 /* ═══════════════════════════════════════════════════════════
    MAPPING
@@ -1045,17 +1422,7 @@ document.querySelectorAll("[data-fmt]").forEach(btn => {
 /* ═══════════════════════════════════════════════════════════
    TABS
 ═══════════════════════════════════════════════════════════ */
-document.querySelectorAll(".tab-btn").forEach(btn => {
-  btn.addEventListener("click", () => {
-    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
-    const tab = btn.dataset.tab;
-    document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
-    document.getElementById(tab).classList.add("active");
-    if (tab === "favorites") renderFavorites();
-    if (tab === "insights") updateInsights(VIEW);
-  });
-});
+/* tabs handled below in load section */
 
 /* ═══════════════════════════════════════════════════════════
    VIEW MODES
@@ -1091,28 +1458,43 @@ document.getElementById("collapseBtn").addEventListener("click", () => {
 });
 
 /* ═══════════════════════════════════════════════════════════
-   LOAD
+   LOAD (fallback depuis cache ou ancienne URL)
 ═══════════════════════════════════════════════════════════ */
 async function load() {
   document.getElementById("countBadge").textContent = "Chargement…";
-  try {
-    const res = await fetch(DATA_URL, { cache: "no-store" });
-    const data = await res.json();
-    const list = Array.isArray(data) ? data : (Array.isArray(data.items) ? data.items : []);
-    RAW = list.map(mapItem);
-    const authors = uniq(RAW.map(p => p.author)).sort((a, b) => a.localeCompare(b, "fr"));
-    const sel = document.getElementById("author");
-    sel.innerHTML = '<option value="">Tous les auteurs</option>' + authors.map(a => `<option value="${a}">${a}</option>`).join("");
-    applyFilters();
-    updateFavCount();
-    renderSavedViews();
-  } catch (e) {
-    document.getElementById("countBadge").textContent = "Erreur de chargement";
-    console.error(e);
+  // Try cache first
+  const cfg = getSyncConfig();
+  if (cfg.cachedPosts && cfg.cachedPosts.length) {
+    loadFromCache();
+    document.getElementById("countBadge").textContent = RAW.length + " posts";
+    return;
   }
+  // No cache — prompt user to configure sync
+  document.getElementById("countBadge").textContent = "Aucun post — configure la Sync";
 }
 
-document.getElementById("reloadBtn").addEventListener("click", load);
+document.getElementById("reloadBtn").addEventListener("click", () => {
+  const cfg = getSyncConfig();
+  if (cfg.token) { runSync(); }
+  else { load(); }
+});
+
+// Tabs (updated to include sync)
+document.querySelectorAll(".tab-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    const tab = btn.dataset.tab;
+    document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
+    document.getElementById(tab).classList.add("active");
+    if (tab === "favorites") renderFavorites();
+    if (tab === "insights") updateInsights(VIEW);
+    if (tab === "sync") updateSyncStatus();
+  });
+});
+
+// Init
+initSyncUI();
 load();
 </script>
 </body>
