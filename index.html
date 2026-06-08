@@ -3,145 +3,364 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Veille LinkedIn – Flux</title>
-<link href="https://unpkg.com/@picocss/pico@2.0.6/css/pico.min.css" rel="stylesheet">
+<title>Veille LinkedIn</title>
 <style>
-:root{--bg:#0b0c0f;--card:#111318;--border:#1b1e25;--text:#e9ecf1;--muted:#a7b0be;--accent:#4f8cff}
-@media (prefers-color-scheme: light){:root{--bg:#f7f8fb;--card:#ffffff;--border:#e7e8ee;--text:#0d1117;--muted:#5b6472;--accent:#3b82f6}}
-html,body{background:var(--bg);color:var(--text)}
-body{max-width:1000px;margin:auto;padding:18px}
-h2{font-weight:700;letter-spacing:.2px;margin:4px 0 12px}
-.header-sub{color:var(--muted);font-size:.95rem;margin-bottom:16px}
-.controls{position:sticky;top:0;z-index:20;display:grid;grid-template-columns:1fr 160px 160px 120px 150px 120px;gap:10px;margin:12px 0 14px;padding:12px;border:1px solid var(--border);border-radius:14px;background:color-mix(in oklab,var(--card) 88%,transparent 12%);-webkit-backdrop-filter:saturate(120%) blur(6px);backdrop-filter:saturate(120%) blur(6px)}
-@media(max-width:1000px){.controls{grid-template-columns:1fr 1fr 1fr}}
-button,select,input{background:var(--card);color:var(--text);border:1px solid var(--border)}
-button:hover{border-color:color-mix(in oklab,var(--accent) 40%,var(--border))}
-.count{color:var(--muted);font-size:.92rem;margin:6px 0 10px}
-.tabs{display:flex;gap:8px;margin:8px 0 14px}
-.tab{border:1px solid var(--border);background:var(--card);color:var(--text);padding:8px 12px;border-radius:12px;text-decoration:none;cursor:pointer}
-.tab.active{border-color:var(--accent);box-shadow:0 0 0 1px color-mix(in oklab,var(--accent) 40%, transparent)}
-.section{display:none}
-.section.active{display:block}
-.grid{display:grid;grid-template-columns:1fr;gap:18px}
-.card{border:1px solid var(--border);border-radius:16px;overflow:hidden;background:var(--card);display:flex;flex-direction:column;box-shadow:0 6px 18px rgba(0,0,0,.12)}
-.head{display:flex;align-items:center;gap:12px;padding:14px 16px 8px 16px}
-.head img{width:34px;height:34px;border-radius:50%;object-fit:cover;border:1px solid var(--border)}
-.who{display:flex;flex-direction:column;gap:2px}
-.name{font-weight:600}
-.meta{color:var(--muted);font-size:.88rem}
-.badges{display:flex;gap:8px;flex-wrap:wrap;padding:2px 16px 10px 16px}
-.badge{font-size:.82rem;border:1px solid var(--border);border-radius:999px;padding:4px 10px;color:var(--text);background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(0,0,0,.03))}
-.badge.link a{color:var(--text);text-decoration:none}
-.badge.link a:hover{color:var(--accent)}
-.fav{cursor:pointer}
-.embed{width:100%;aspect-ratio:16/9;background:#0f1116;border-top:1px solid var(--border)}
-.embed iframe{width:100%;height:100%;border:0;border-bottom:1px solid var(--border)}
-.fallback{padding:14px 16px;font-size:1rem;line-height:1.4;color:var(--text)}
-.footer-actions{display:flex;gap:10px;padding:12px 16px 16px 16px}
-.footer-actions a{border:1px solid var(--border);border-radius:12px;padding:8px 12px;text-decoration:none;color:var(--text);background:var(--card)}
-.footer-actions a:hover{border-color:var(--accent)}
-hr.sep{border:none;border-top:1px solid var(--border);margin:0}
-.panel{border:1px solid var(--border);border-radius:14px;background:var(--card);padding:14px}
-.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-@media(max-width:900px){.kpis{grid-template-columns:1fr}}
-.kpi{border:1px solid var(--border);border-radius:12px;padding:12px;text-align:center}
-.kpi .v{font-size:1.4rem;font-weight:700}
-.heat{width:100%;border-collapse:separate;border-spacing:4px;margin-top:8px}
-.heat th,.heat td{padding:6px 8px;border:1px solid var(--border);border-radius:8px;text-align:center}
-.wcloud{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
-.wc{border:1px solid var(--border);border-radius:999px;padding:6px 10px;cursor:pointer;background:var(--card)}
-.wc.active{border-color:var(--accent)}
-.cloud-controls{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;align-items:center}
-.table{width:100%;border-collapse:separate;border-spacing:0;margin-top:12px}
-.table th,.table td{padding:10px;border-bottom:1px solid var(--border);text-align:left}
-.table th{color:var(--muted);font-weight:600}
+/* ── tokens ── */
+:root{
+  --bg:#0b0c0f;--card:#111318;--border:#1e2128;--border2:rgba(255,255,255,.13);
+  --text:#e9ecf1;--muted:#6b7280;--accent:#4f8cff;--accent2:#a78bfa;
+  --green:#34d399;--amber:#fbbf24;--red:#f87171;
+  --r:10px;--r-lg:14px;
+  --font:'Inter',system-ui,sans-serif;--mono:'JetBrains Mono','Fira Mono',monospace;
+}
+@media(prefers-color-scheme:light){
+  :root{--bg:#f4f5f7;--card:#fff;--border:#e5e7eb;--border2:rgba(0,0,0,.12);--text:#0d0e11;--muted:#9ca3af;}
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:15px;-webkit-font-smoothing:antialiased}
+body{background:var(--bg);color:var(--text);font-family:var(--font);display:flex;min-height:100vh}
+
+/* ── sidebar ── */
+#sb{width:252px;min-width:252px;height:100vh;position:sticky;top:0;background:var(--card);
+  border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;
+  transition:width .22s,min-width .22s}
+#sb.col{width:48px;min-width:48px}
+.sb-hd{padding:14px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.sb-logo{font-weight:800;font-size:.95rem;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;background-clip:text}
+.sb-tog{margin-left:auto;background:none;border:none;color:var(--muted);cursor:pointer;padding:3px;
+  border-radius:5px;display:flex;align-items:center;flex-shrink:0}
+.sb-tog svg{width:15px;height:15px;transition:transform .22s}
+#sb.col .sb-tog svg{transform:rotate(180deg)}
+#sb.col .sb-logo,#sb.col .sb-sec>*:not(.sb-tog){display:none}
+#sb.col .sb-hd{justify-content:center;padding:12px 0}
+#sb.col .sb-sec{padding:6px 0;display:flex;justify-content:center}
+.sb-sec{padding:10px 10px 6px;border-bottom:1px solid var(--border)}
+.sb-lbl{font-size:.65rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--muted);padding:0 2px;margin-bottom:6px;white-space:nowrap}
+.sb-inp{width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:var(--r);
+  padding:7px 9px;color:var(--text);font-family:var(--font);font-size:.82rem;outline:none}
+.sb-inp:focus{border-color:var(--accent)}
+.sb-inp::placeholder{color:var(--muted)}
+.sb-sel{width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:var(--r);
+  padding:7px 26px 7px 9px;color:var(--text);font-family:var(--font);font-size:.82rem;
+  outline:none;cursor:pointer;appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 9px center}
+.sb-row{display:flex;gap:5px;margin-top:5px}
+.sb-row .sb-inp{flex:1}
+.pill{display:inline-flex;align-items:center;gap:4px;background:rgba(79,140,255,.1);
+  border:1px solid rgba(79,140,255,.22);color:var(--accent);border-radius:999px;
+  padding:2px 8px;font-size:.72rem;cursor:pointer;margin:2px}
+.pill:hover{background:rgba(79,140,255,.18)}
+.vi-list{display:flex;flex-direction:column;gap:3px}
+.vi{display:flex;align-items:center;gap:7px;padding:6px 8px;border-radius:var(--r);
+  cursor:pointer;font-size:.8rem;border:1px solid transparent}
+.vi:hover{background:var(--bg)}
+.vi.active{background:rgba(79,140,255,.08);border-color:rgba(79,140,255,.18);color:var(--accent)}
+.vi-name{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vi-del{opacity:0;background:none;border:none;color:var(--muted);cursor:pointer;padding:2px;font-size:.75rem}
+.vi:hover .vi-del{opacity:1}
+.vi-add{width:100%;background:none;border:1px dashed var(--border2);border-radius:var(--r);
+  padding:6px;color:var(--muted);font-size:.78rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:4px;margin-top:3px}
+.vi-add:hover{border-color:var(--accent);color:var(--accent)}
+.alert-sec{flex:1;overflow-y:auto;padding:10px 10px 6px}
+
+/* ── main ── */
+#main{flex:1;min-width:0;display:flex;flex-direction:column}
+#topbar{background:var(--card);border-bottom:1px solid var(--border);padding:0 16px;
+  display:flex;align-items:center;gap:8px;height:48px;flex-shrink:0}
+.tab-btn{background:none;border:none;color:var(--muted);font-family:var(--font);font-size:.86rem;
+  font-weight:500;cursor:pointer;padding:5px 10px;border-radius:var(--r);white-space:nowrap}
+.tab-btn:hover{color:var(--text)}
+.tab-btn.active{color:var(--accent);background:rgba(79,140,255,.09)}
+.tr{margin-left:auto;display:flex;align-items:center;gap:7px}
+.cnt{background:var(--bg);border:1px solid var(--border);border-radius:999px;
+  padding:2px 9px;font-size:.74rem;color:var(--muted);font-family:var(--mono)}
+.icon-btn{background:none;border:1px solid var(--border2);border-radius:var(--r);
+  color:var(--muted);padding:5px 9px;cursor:pointer;font-size:.79rem;
+  display:flex;align-items:center;gap:4px}
+.icon-btn:hover{border-color:var(--accent);color:var(--accent)}
+.vt{display:flex;gap:3px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:2px}
+.vt-b{background:none;border:none;color:var(--muted);padding:4px 7px;border-radius:6px;cursor:pointer;display:flex;align-items:center}
+.vt-b.active{background:var(--card);color:var(--text)}
+.vt-b svg{width:14px;height:14px}
+
+/* ── content ── */
+#content{flex:1;overflow-y:auto;padding:16px}
+.sec{display:none}.sec.active{display:block}
+
+/* ── feed ── */
+#pg{display:grid;grid-template-columns:1fr;gap:12px}
+#pg.two{grid-template-columns:1fr 1fr}
+
+/* ── card ── */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);
+  overflow:hidden;display:flex;flex-direction:column}
+.card:hover{border-color:var(--border2)}
+.c-head{display:flex;align-items:center;gap:9px;padding:11px 13px 7px}
+.c-av{width:34px;height:34px;border-radius:50%;object-fit:cover;border:1px solid var(--border);flex-shrink:0;background:var(--bg)}
+.c-name{font-weight:500;font-size:.87rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.c-date{font-size:.73rem;color:var(--muted);font-family:var(--mono)}
+.c-fav{margin-left:auto;background:none;border:none;cursor:pointer;font-size:.95rem;padding:2px;flex-shrink:0}
+.c-meta{display:flex;align-items:center;gap:5px;padding:2px 13px 7px;flex-wrap:wrap}
+.bdg{display:inline-flex;align-items:center;gap:3px;border:1px solid var(--border);
+  border-radius:999px;padding:2px 8px;font-size:.74rem;color:var(--muted);background:var(--bg)}
+.bdg.hot{border-color:rgba(79,140,255,.28);color:var(--accent);background:rgba(79,140,255,.07)}
+.bdg a{color:inherit;text-decoration:none}
+.bdg a:hover{color:var(--accent)}
+.vbar{height:3px;background:var(--bg);border-radius:999px;margin:0 13px 7px}
+.vfill{height:100%;border-radius:999px;transition:width .3s}
+.c-embed{aspect-ratio:16/9;background:var(--bg);border-top:1px solid var(--border)}
+.c-embed iframe{width:100%;height:100%;border:0}
+.c-text{padding:9px 13px;font-size:.85rem;line-height:1.55}
+.c-note{margin:0 13px 7px;background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.18);
+  border-radius:var(--r);padding:6px 9px;font-size:.76rem;color:var(--amber)}
+hr.sep{border:none;border-top:1px solid var(--border)}
+.c-foot{display:flex;gap:7px;padding:9px 13px}
+.c-foot a{border:1px solid var(--border);border-radius:var(--r);padding:4px 9px;
+  text-decoration:none;color:var(--muted);font-size:.77rem;background:var(--bg)}
+.c-foot a:hover{border-color:var(--accent);color:var(--accent)}
+.note-btn{margin-left:auto;background:none;border:1px solid var(--border);border-radius:var(--r);
+  padding:4px 9px;color:var(--muted);font-size:.77rem;cursor:pointer}
+.note-btn:hover,.note-btn.has{border-color:rgba(251,191,36,.4);color:var(--amber)}
+
+/* compact */
+.card.cpt{flex-direction:row;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--r)}
+.card.cpt .c-embed,.card.cpt .c-foot,.card.cpt hr.sep{display:none}
+.card.cpt .c-head{padding:0;flex:1;min-width:0}
+.card.cpt .c-meta{padding:0;flex-wrap:nowrap}
+.card.cpt .c-text{padding:0;font-size:.79rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:460px}
+.card.cpt .cscore{flex-shrink:0;text-align:right}
+.card.cpt .cscore .sv{font-family:var(--mono);font-size:.79rem;color:var(--accent)}
+.card.cpt .cscore .sl{font-size:.69rem;color:var(--muted)}
+
+/* ── insights ── */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:14px}
+@media(max-width:900px){.kpi-grid{grid-template-columns:1fr 1fr}}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);padding:12px 14px}
+.kpi-lbl{font-size:.72rem;color:var(--muted);margin-bottom:5px}
+.kpi-val{font-size:1.5rem;font-weight:600;font-family:var(--mono);line-height:1}
+.kpi-sub{font-size:.71rem;color:var(--muted);margin-top:4px}
+.panel{background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);padding:14px;margin-bottom:12px}
+.ptitle{font-size:.72rem;font-weight:600;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;margin-bottom:12px}
+.ig{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:900px){.ig{grid-template-columns:1fr}}
+.full{grid-column:1/-1}
+/* top posts */
+.tp{display:flex;align-items:center;gap:9px;padding:7px;border-radius:var(--r);cursor:pointer;border:1px solid transparent}
+.tp:hover{background:var(--bg);border-color:var(--border)}
+.tp-rk{font-family:var(--mono);font-size:.76rem;color:var(--muted);min-width:18px}
+.tp-info{flex:1;min-width:0}
+.tp-auth{font-size:.79rem;font-weight:500}
+.tp-ex{font-size:.75rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tp-sc{text-align:right;flex-shrink:0}
+.tp-sc .sv{font-family:var(--mono);font-size:.82rem;color:var(--accent)}
+.tp-sc .sl{font-size:.69rem;color:var(--muted)}
+/* hashtag bars */
+.ht-row{display:flex;align-items:center;gap:7px;margin-bottom:7px}
+.ht-tag{font-size:.77rem;color:var(--accent);min-width:90px;font-family:var(--mono)}
+.ht-bw{flex:1;height:5px;background:var(--bg);border-radius:999px;overflow:hidden}
+.ht-b{height:100%;border-radius:999px;background:linear-gradient(90deg,var(--accent),var(--accent2))}
+.ht-eng{font-size:.72rem;color:var(--muted);min-width:65px;text-align:right;font-family:var(--mono)}
+/* heatmap */
+.heat-wrap{overflow-x:auto}
+.htbl{border-collapse:separate;border-spacing:3px;width:100%}
+.htbl th{font-size:.68rem;color:var(--muted);font-weight:400;text-align:center;padding:2px}
+.htbl td{border-radius:4px;text-align:center;padding:4px 2px;font-size:.69rem;font-family:var(--mono)}
+/* trend */
+.trend{display:flex;align-items:flex-end;gap:3px;height:72px;margin-bottom:5px}
+.tc{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px}
+.tb{width:100%;border-radius:3px 3px 0 0;min-height:2px}
+.tl{font-size:.62rem;color:var(--muted);font-family:var(--mono)}
+/* authors table */
+.atbl{width:100%;border-collapse:collapse}
+.atbl th{font-size:.72rem;color:var(--muted);font-weight:500;padding:5px 7px;border-bottom:1px solid var(--border);text-align:left}
+.atbl td{padding:6px 7px;font-size:.79rem;border-bottom:1px solid var(--border)}
+.atbl tr:last-child td{border-bottom:none}
+.atbl tr:hover td{background:var(--bg)}
+
+/* ── digest modal ── */
+.mo{position:fixed;inset:0;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;z-index:100;opacity:0;pointer-events:none;transition:opacity .18s}
+.mo.open{opacity:1;pointer-events:all}
+.mo-box{background:var(--card);border:1px solid var(--border2);border-radius:var(--r-lg);width:660px;max-width:94vw;max-height:82vh;display:flex;flex-direction:column;overflow:hidden}
+.mo-hd{display:flex;align-items:center;padding:14px 16px;border-bottom:1px solid var(--border)}
+.mo-hd h3{font-size:.95rem;font-weight:600}
+.mo-close{margin-left:auto;background:none;border:none;color:var(--muted);font-size:1.1rem;cursor:pointer}
+.mo-body{flex:1;overflow-y:auto;padding:14px 16px}
+.mo-out{background:var(--bg);border:1px solid var(--border);border-radius:var(--r);
+  padding:12px;font-family:var(--mono);font-size:.75rem;line-height:1.6;white-space:pre-wrap;min-height:160px}
+.mo-foot{padding:10px 16px;border-top:1px solid var(--border);display:flex;gap:7px;justify-content:flex-end}
+.btn{background:var(--accent);color:#fff;border:none;border-radius:var(--r);
+  padding:7px 14px;font-family:var(--font);font-size:.82rem;cursor:pointer;font-weight:500}
+.btn:hover{opacity:.85}
+.btn.ghost{background:none;border:1px solid var(--border2);color:var(--text)}
+.btn.ghost:hover{border-color:var(--accent);color:var(--accent)}
+
+/* ── misc ── */
+.empty{text-align:center;color:var(--muted);padding:50px 20px;font-size:.87rem}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px}
+@media(max-width:680px){#sb{display:none}#pg.two{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
-<h2>Veille LinkedIn</h2>
-<p class="header-sub">Dernier run Apify • filtres front • favoris • heatmap • nuage de mots propre • tableau auteurs</p>
 
-<div class="controls">
-  <input id="q" type="search" placeholder="Filtrer par mots-clés…">
-  <select id="author"><option value="">Tous auteurs</option></select>
-  <select id="period">
-    <option value="all">Toute période</option>
-    <option value="7">7 jours</option>
-    <option value="30">30 jours</option>
-    <option value="90">90 jours</option>
-  </select>
-  <input id="minLikes" type="number" min="0" value="0" placeholder="Likes min">
-  <select id="sort">
-    <option value="dateDesc">Récents → anciens</option>
-    <option value="dateAsc">Anciens → récents</option>
-    <option value="likesDesc">Likes ↓</option>
-    <option value="commentsDesc">Commentaires ↓</option>
-  </select>
-  <div style="display:flex;gap:8px;justify-content:flex-end">
-    <button id="reload">Recharger</button>
+<!-- ── SIDEBAR ── -->
+<nav id="sb">
+  <div class="sb-hd">
+    <span class="sb-logo">Veille LI</span>
+    <button class="sb-tog" id="sbTog">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+    </button>
+  </div>
+  <div style="flex:1;overflow-y:auto;display:flex;flex-direction:column">
+
+    <div class="sb-sec">
+      <div class="sb-lbl">Recherche</div>
+      <input id="q" class="sb-inp" type="search" placeholder="Mots-clés, auteur…">
+    </div>
+
+    <div class="sb-sec">
+      <div class="sb-lbl">Filtres</div>
+      <select id="author" class="sb-sel"><option value="">Tous les auteurs</option></select>
+      <div class="sb-row" style="margin-top:5px">
+        <select id="period" class="sb-sel">
+          <option value="all">Toute période</option>
+          <option value="7">7 jours</option>
+          <option value="30">30 jours</option>
+          <option value="90">90 jours</option>
+        </select>
+      </div>
+      <div class="sb-row">
+        <input id="minLikes" class="sb-inp" type="number" min="0" value="0" placeholder="Likes min">
+        <select id="sort" class="sb-sel">
+          <option value="dateDesc">Récents</option>
+          <option value="dateAsc">Anciens</option>
+          <option value="likesDesc">Likes ↓</option>
+          <option value="commentsDesc">Coms ↓</option>
+          <option value="viralDesc">Viral ↓</option>
+        </select>
+      </div>
+      <div id="pills" style="margin-top:5px;display:flex;flex-wrap:wrap"></div>
+    </div>
+
+    <div class="sb-sec">
+      <div class="sb-lbl">Alertes seuil</div>
+      <div style="display:flex;gap:5px;align-items:center">
+        <input id="alertLikes" class="sb-inp" type="number" min="0" placeholder="Likes min" style="flex:1">
+        <span style="font-size:.72rem;color:var(--muted)">likes</span>
+      </div>
+      <div id="alertList" style="margin-top:5px;display:flex;flex-direction:column;gap:3px;font-size:.74rem;color:var(--muted)"></div>
+    </div>
+
+    <div class="sb-sec" style="flex:1">
+      <div class="sb-lbl">Vues sauvegardées</div>
+      <div id="viList" class="vi-list"></div>
+      <button class="vi-add" id="viSave">+ Sauvegarder la vue</button>
+    </div>
+
+  </div>
+  <div style="padding:9px 10px;border-top:1px solid var(--border)">
+    <button class="btn" id="reload" style="width:100%;font-size:.8rem">↺ Recharger</button>
+  </div>
+</nav>
+
+<!-- ── MAIN ── -->
+<div id="main">
+  <div id="topbar">
+    <button class="tab-btn active" data-tab="feed">Flux</button>
+    <button class="tab-btn" data-tab="insights">Insights</button>
+    <button class="tab-btn" data-tab="favorites">Favoris <span id="favCnt" style="font-size:.69rem;color:var(--muted);font-family:var(--mono)"></span></button>
+    <div class="tr">
+      <span class="cnt" id="cnt">—</span>
+      <div class="vt">
+        <button class="vt-b active" id="vt-card" title="Cartes">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        </button>
+        <button class="vt-b" id="vt-list" title="Liste">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>
+        </button>
+        <button class="vt-b" id="vt-2col" title="2 colonnes">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="8" height="18" rx="1"/><rect x="13" y="3" width="8" height="18" rx="1"/></svg>
+        </button>
+      </div>
+      <button class="icon-btn" id="digestBtn">📋 Digest</button>
+    </div>
+  </div>
+
+  <div id="content">
+    <section id="feed" class="sec active">
+      <div id="pg"></div>
+      <div id="empty" class="empty" style="display:none">Aucun post ne correspond aux filtres.</div>
+    </section>
+
+    <section id="insights" class="sec">
+      <div class="kpi-grid" id="kpiGrid"></div>
+      <div class="panel"><div class="ptitle">Volume & engagement / semaine</div><div id="trend"></div></div>
+      <div class="ig">
+        <div class="panel"><div class="ptitle">Top 5 posts — score viral</div><div id="topPosts"></div></div>
+        <div class="panel"><div class="ptitle">Hashtags les plus engageants</div><div id="htBars"></div></div>
+        <div class="panel full"><div class="ptitle">Meilleurs créneaux (engagement moyen / créneau)</div>
+          <div class="heat-wrap"><table class="htbl" id="heatTbl"></table></div>
+          <div style="font-size:.69rem;color:var(--muted);margin-top:6px">Engagement moyen = (likes+comments) des posts publiés sur ce créneau</div>
+        </div>
+        <div class="panel full"><div class="ptitle">Auteurs</div>
+          <table class="atbl" id="authorTbl">
+            <thead><tr><th>Auteur</th><th>Posts</th><th>Likes</th><th>Coms</th><th>Eng. moy.</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="favorites" class="sec">
+      <div id="favGrid"></div>
+      <div id="favEmpty" class="empty" style="display:none">Aucun favori. Clique sur ☆ pour en ajouter.</div>
+    </section>
   </div>
 </div>
 
-<div class="tabs">
-  <button class="tab active" data-tab="feed">Flux</button>
-  <button class="tab" data-tab="insights">Insights</button>
-  <button class="tab" data-tab="favorites">Favoris</button>
+<!-- ── DIGEST MODAL ── -->
+<div class="mo" id="moDigest">
+  <div class="mo-box">
+    <div class="mo-hd">
+      <h3>Digest — vue actuelle</h3>
+      <button class="mo-close" id="moClose">✕</button>
+    </div>
+    <div class="mo-body">
+      <div style="display:flex;gap:6px;margin-bottom:9px;flex-wrap:wrap">
+        <button class="btn ghost" data-fmt="markdown" style="font-size:.77rem">Markdown</button>
+        <button class="btn ghost" data-fmt="slack" style="font-size:.77rem">Slack</button>
+        <button class="btn ghost" data-fmt="notion" style="font-size:.77rem">Notion</button>
+      </div>
+      <div class="mo-out" id="moOut"></div>
+    </div>
+    <div class="mo-foot">
+      <button class="btn ghost" id="moClose2">Fermer</button>
+      <button class="btn" id="moCopy">Copier</button>
+    </div>
+  </div>
 </div>
-
-<div class="count" id="count"></div>
-
-<section id="feed" class="section active">
-  <div id="grid" class="grid"></div>
-</section>
-
-<section id="insights" class="section">
-  <div class="panel">
-    <div class="kpis">
-      <div class="kpi"><div>Total posts (filtrés)</div><div id="kpiPosts" class="v">0</div></div>
-      <div class="kpi"><div>Likes (filtrés)</div><div id="kpiLikes" class="v">0</div></div>
-      <div class="kpi"><div>Commentaires (filtrés)</div><div id="kpiComments" class="v">0</div></div>
-    </div>
-  </div>
-  <div class="panel" style="margin-top:12px">
-    <h5>Créneaux d’engagement (heatmap des posts filtrés)</h5>
-    <table class="heat" id="heat"></table>
-  </div>
-  <div class="panel" style="margin-top:12px">
-    <h5>Nuage de mots clés (posts filtrés)</h5>
-    <div class="cloud-controls">
-      <label><input type="checkbox" id="cloudHashtags"> Hashtags seulement</label>
-      <label>Min occurrences <input id="cloudMin" type="number" value="2" min="1" style="width:72px"></label>
-      <input id="cloudStop" type="text" placeholder="Stopwords perso, séparés par des virgules" style="min-width:280px">
-      <button id="cloudReset">Réinitialiser filtre mot</button>
-    </div>
-    <div id="wcloud" class="wcloud"></div>
-  </div>
-  <div class="panel" style="margin-top:12px">
-    <h5>Auteurs (sur posts filtrés)</h5>
-    <table class="table" id="authorsTbl">
-      <thead><tr><th>Auteur</th><th>Posts</th><th>Likes</th><th>Commentaires</th></tr></thead>
-      <tbody></tbody>
-    </table>
-  </div>
-</section>
-
-<section id="favorites" class="section">
-  <div id="favGrid" class="grid"></div>
-</section>
 
 <script>
 const DATA_URL="https://api.apify.com/v2/acts/supreme_coder~linkedin-post/runs/last/dataset/items?token=apify_api_KY6uoGqkXVFhCzeYBQO0OQFjnGs2RB3HzGy9";
-let RAW=[],VIEW=[],FAVS=new Set(JSON.parse(localStorage.getItem("veille_favs")||"[]")),ACTIVE_WORD=null;
+let RAW=[],VIEW=[];
+let FAVS=new Set(JSON.parse(localStorage.getItem("vl2_favs")||"[]"));
+let NOTES=JSON.parse(localStorage.getItem("vl2_notes")||"{}");
+let VIEWS=JSON.parse(localStorage.getItem("vl2_views")||"[]");
+let VM="card",ACTIVE_WORD=null,DFMT="markdown";
 
-function getActivityId(item){
-  const u=item.urn||item.shareUrn||"";
-  const m1=u.match(/activity:(\d+)/);
-  if(m1)return m1[1];
-  const url=item.url||"";
+/* ── MAP ── */
+function getActId(o){
+  const u=o.urn||o.shareUrn||"";
+  const m1=u.match(/activity:(\d+)/);if(m1)return m1[1];
+  const url=o.url||"";
   const m2=url.match(/activity-(\d+)/)||url.match(/urn:li:activity:(\d+)/);
   return m2?m2[1]:null;
 }
-
 function mapItem(o){
   const author=(o.author&&o.author.name)||o.authorName||"";
   const authorLogo=(o.author&&o.author.logoUrl)||o.authorProfilePicture||"";
@@ -151,218 +370,354 @@ function mapItem(o){
   const comments=Number(o.numComments||0);
   const text=o.text||"";
   const url=o.url||"";
-  const activityId=getActivityId(o);
+  const activityId=getActId(o);
   const id=url||activityId||Math.random().toString(36).slice(2);
-  return {id,author,authorLogo,authorUrl,date,likes,comments,text,url,activityId};
+  const eng=likes+comments;
+  const ageDays=date?Math.max(1,(Date.now()-date.getTime())/86400000):999;
+  const viral=Math.round((eng/ageDays)*10)/10;
+  return{id,author,authorLogo,authorUrl,date,likes,comments,text,url,activityId,eng,viral};
 }
-
 function uniq(a){return Array.from(new Set(a.filter(Boolean)))}
 
-function render(posts,targetId="grid"){
-  const grid=document.getElementById(targetId);
-  const count=document.getElementById("count");
-  if(targetId==="grid") count.textContent=posts.length?posts.length+" posts":"Aucun post ne correspond aux filtres";
-  grid.innerHTML="";
+/* ── RENDER ── */
+function viralColor(v,max){
+  if(!max)return"var(--muted)";
+  const r=v/max;
+  return r>.65?"var(--green)":r>.3?"var(--amber)":"var(--accent)";
+}
+function renderPosts(posts,tid="pg"){
+  const g=document.getElementById(tid);
+  g.innerHTML="";
+  const maxV=Math.max(...posts.map(p=>p.viral),1);
+  const compact=VM==="list"&&tid==="pg";
   posts.forEach(p=>{
-    const card=document.createElement("article");
-    card.className="card";
-    const head=document.createElement("div");
-    head.className="head";
-    const favMark=FAVS.has(p.id)?"⭐":"☆";
-    head.innerHTML=(p.authorLogo?('<img src="'+p.authorLogo+'" alt="">'):"")+'<div class="who"><span class="name">'+(p.author||"")+'</span><span class="meta">'+(p.date?p.date.toLocaleString("fr-FR"):"")+'</span></div><span class="badge fav" data-id="'+p.id+'" style="margin-left:auto">'+favMark+'</span>';
-    card.appendChild(head);
-    const badges=document.createElement("div");
-    badges.className="badges";
-    badges.innerHTML='<span class="badge">👍 '+p.likes+'</span><span class="badge">💬 '+p.comments+'</span>'+(p.url?('<span class="badge link"><a href="'+p.url+'" target="_blank" rel="noopener">Ouvrir LinkedIn</a></span>'):"");
-    card.appendChild(badges);
-    const wrap=document.createElement("div");
-    if(p.activityId){
-      wrap.className="embed";
-      const src='https://www.linkedin.com/embed/feed/update/urn:li:activity:'+p.activityId;
-      const iframe=document.createElement("iframe");
-      iframe.src=src;iframe.allowFullscreen=true;iframe.title="LinkedIn post";
-      wrap.appendChild(iframe);
-    }else{
-      wrap.className="fallback";
-      wrap.textContent=p.text?(p.text.length>320?p.text.slice(0,320)+"…":p.text):"Aperçu indisponible";
+    const fav=FAVS.has(p.id);
+    const note=NOTES[p.id]||"";
+    const pct=Math.round((p.viral/maxV)*100);
+    const col=viralColor(p.viral,maxV);
+    const el=document.createElement("article");
+    el.className="card"+(compact?" cpt":"");
+    if(compact){
+      el.innerHTML=`<img class="c-av" src="${p.authorLogo||""}" alt="" onerror="this.style.display='none'">
+        <div class="c-head" style="flex:1;min-width:0"><div>
+          <div class="c-name">${p.author||""}</div>
+          <div class="c-text">${p.text?(p.text.length>110?p.text.slice(0,110)+"…":p.text):"—"}</div>
+        </div></div>
+        <div class="cscore"><div class="sv" style="color:${col}">⚡${p.viral}/j</div><div class="sl">👍${p.likes} 💬${p.comments}</div><div class="sl">${p.date?p.date.toLocaleDateString("fr-FR"):""}</div></div>
+        <button class="c-fav" data-id="${p.id}">${fav?"⭐":"☆"}</button>`;
+    } else {
+      el.innerHTML=`<div class="c-head">
+        <img class="c-av" src="${p.authorLogo||""}" alt="" onerror="this.style.display='none'">
+        <div style="flex:1;min-width:0"><div class="c-name">${p.author||""}</div><div class="c-date">${p.date?p.date.toLocaleString("fr-FR"):""}</div></div>
+        <button class="c-fav" data-id="${p.id}">${fav?"⭐":"☆"}</button>
+      </div>
+      <div class="c-meta">
+        <span class="bdg">👍 ${p.likes}</span><span class="bdg">💬 ${p.comments}</span>
+        <span class="bdg hot" title="Engagement / jour">⚡ ${p.viral}/j</span>
+        ${p.url?`<span class="bdg"><a href="${p.url}" target="_blank" rel="noopener">LinkedIn ↗</a></span>`:""}
+      </div>
+      <div class="vbar"><div class="vfill" style="width:${pct}%;background:${col}"></div></div>
+      ${p.activityId
+        ?`<div class="c-embed"><iframe src="https://www.linkedin.com/embed/feed/update/urn:li:activity:${p.activityId}" allowfullscreen title="post"></iframe></div>`
+        :`<div class="c-text">${p.text?(p.text.length>280?p.text.slice(0,280)+"…":p.text):"Aperçu indisponible"}</div>`}
+      ${note?`<div class="c-note"><div style="font-size:.67rem;font-weight:600;opacity:.7;margin-bottom:2px">NOTE</div>${note}</div>`:""}
+      <hr class="sep">
+      <div class="c-foot">
+        ${p.url?`<a href="${p.url}" target="_blank" rel="noopener">Voir le post</a>`:""}
+        ${p.authorUrl?`<a href="${p.authorUrl}" target="_blank" rel="noopener">Voir la page</a>`:""}
+        <button class="note-btn${note?" has":""}" data-id="${p.id}">✎ Note</button>
+      </div>`;
     }
-    card.appendChild(wrap);
-    const hr=document.createElement("hr");hr.className="sep";card.appendChild(hr);
-    const actions=document.createElement("div");actions.className="footer-actions";
-    if(p.url){const a=document.createElement("a");a.href=p.url;a.target="_blank";a.rel="noopener";a.textContent="Voir le post";actions.appendChild(a)}
-    if(p.authorUrl){const a2=document.createElement("a");a2.href=p.authorUrl;a2.target="_blank";a2.rel="noopener";a2.textContent="Voir la page";actions.appendChild(a2)}
-    card.appendChild(actions);
-    grid.appendChild(card);
+    g.appendChild(el);
   });
-  grid.querySelectorAll(".fav").forEach(el=>{
-    el.addEventListener("click",()=>{
-      const id=el.getAttribute("data-id");
-      if(FAVS.has(id)){FAVS.delete(id);el.textContent="☆"}else{FAVS.add(id);el.textContent="⭐"}
-      localStorage.setItem("veille_favs",JSON.stringify(Array.from(FAVS)));
-      if(targetId==="favGrid") renderFavorites();
-    });
-  });
+  g.querySelectorAll(".c-fav").forEach(el=>el.addEventListener("click",e=>{
+    e.stopPropagation();
+    const id=el.dataset.id;
+    FAVS.has(id)?(FAVS.delete(id),el.textContent="☆"):(FAVS.add(id),el.textContent="⭐");
+    localStorage.setItem("vl2_favs",JSON.stringify([...FAVS]));
+    updateFavCnt();
+    if(tid==="favGrid")renderFavs();
+  }));
+  g.querySelectorAll(".note-btn").forEach(el=>el.addEventListener("click",e=>{
+    e.stopPropagation();
+    const id=el.dataset.id;
+    const cur=NOTES[id]||"";
+    const v=prompt("Note (vide = supprimer) :",cur);
+    if(v===null)return;
+    v.trim()?NOTES[id]=v.trim():delete NOTES[id];
+    localStorage.setItem("vl2_notes",JSON.stringify(NOTES));
+    applyFilters();
+  }));
+}
+function updateFavCnt(){document.getElementById("favCnt").textContent=FAVS.size?`(${FAVS.size})`:""}
+function renderFavs(){
+  const posts=RAW.filter(p=>FAVS.has(p.id));
+  document.getElementById("favEmpty").style.display=posts.length?"none":"block";
+  if(posts.length)renderPosts(posts,"favGrid");
+  else document.getElementById("favGrid").innerHTML="";
 }
 
+/* ── FILTERS ── */
+function getF(){
+  return{
+    q:document.getElementById("q").value.trim().toLowerCase(),
+    author:document.getElementById("author").value,
+    period:document.getElementById("period").value,
+    minLikes:Number(document.getElementById("minLikes").value||0),
+    sort:document.getElementById("sort").value,
+    alertLikes:Number(document.getElementById("alertLikes").value||0),
+  };
+}
 function applyFilters(){
-  const q=document.getElementById("q").value.trim().toLowerCase();
-  const author=document.getElementById("author").value;
-  const minLikes=Number(document.getElementById("minLikes").value||0);
-  const sort=document.getElementById("sort").value;
-  const period=document.getElementById("period").value;
+  const{q,author,period,minLikes,sort,alertLikes}=getF();
   const now=new Date();
-  let fromDate=null;
-  if(period!=="all"){fromDate=new Date();fromDate.setDate(now.getDate()-Number(period))}
+  let from=null;
+  if(period!=="all"){from=new Date();from.setDate(now.getDate()-Number(period))}
   let arr=RAW.slice();
-  if(fromDate) arr=arr.filter(p=>p.date && p.date>=fromDate);
-  if(q) arr=arr.filter(p=>(p.text&&p.text.toLowerCase().includes(q))||(p.author&&p.author.toLowerCase().includes(q)));
-  if(author) arr=arr.filter(p=>p.author===author);
-  if(minLikes>0) arr=arr.filter(p=>p.likes>=minLikes);
-  if(ACTIVE_WORD) arr=arr.filter(p=>(p.text||"").toLowerCase().includes(ACTIVE_WORD));
-  if(sort==="dateDesc") arr.sort((a,b)=>(b.date?.getTime()||0)-(a.date?.getTime()||0));
-  else if(sort==="dateAsc") arr.sort((a,b)=>(a.date?.getTime()||0)-(b.date?.getTime()||0));
-  else if(sort==="likesDesc") arr.sort((a,b)=>b.likes-a.likes);
-  else if(sort==="commentsDesc") arr.sort((a,b)=>b.comments-a.comments);
+  if(from)arr=arr.filter(p=>p.date&&p.date>=from);
+  if(q)arr=arr.filter(p=>(p.text&&p.text.toLowerCase().includes(q))||(p.author&&p.author.toLowerCase().includes(q)));
+  if(author)arr=arr.filter(p=>p.author===author);
+  if(minLikes>0)arr=arr.filter(p=>p.likes>=minLikes);
+  if(ACTIVE_WORD)arr=arr.filter(p=>(p.text||"").toLowerCase().includes(ACTIVE_WORD));
+  const S={dateDesc:(a,b)=>(b.date?.getTime()||0)-(a.date?.getTime()||0),dateAsc:(a,b)=>(a.date?.getTime()||0)-(b.date?.getTime()||0),likesDesc:(a,b)=>b.likes-a.likes,commentsDesc:(a,b)=>b.comments-a.comments,viralDesc:(a,b)=>b.viral-a.viral};
+  arr.sort(S[sort]||S.dateDesc);
   VIEW=arr;
-  render(VIEW,"grid");
+  document.getElementById("cnt").textContent=arr.length+" posts";
+  document.getElementById("empty").style.display=arr.length?"none":"block";
+  renderPosts(VIEW,"pg");
   updateInsights(VIEW);
+  renderPills();
+  updateAlerts(alertLikes);
+}
+function renderPills(){
+  const{q,author,period,minLikes}=getF();
+  const c=document.getElementById("pills");c.innerHTML="";
+  if(q)addPill(c,`"${q}"`,()=>{document.getElementById("q").value="";applyFilters()});
+  if(author)addPill(c,author,()=>{document.getElementById("author").value="";applyFilters()});
+  if(period!=="all")addPill(c,period+"j",()=>{document.getElementById("period").value="all";applyFilters()});
+  if(minLikes>0)addPill(c,"≥"+minLikes+"👍",()=>{document.getElementById("minLikes").value=0;applyFilters()});
+  if(ACTIVE_WORD)addPill(c,ACTIVE_WORD,()=>{ACTIVE_WORD=null;applyFilters()});
+}
+function addPill(c,lbl,fn){
+  const p=document.createElement("span");p.className="pill";
+  p.innerHTML=`${lbl} ✕`;p.addEventListener("click",fn);c.appendChild(p);
+}
+function updateAlerts(thr){
+  const list=document.getElementById("alertList");
+  if(!thr){list.innerHTML="";return}
+  const hits=RAW.filter(p=>p.likes>=thr);
+  list.innerHTML=hits.length
+    ?hits.slice(0,3).map(p=>`<div style="padding:4px 7px;background:rgba(248,113,113,.07);border:1px solid rgba(248,113,113,.18);border-radius:6px"><span style="color:var(--red)">⚡</span> ${p.author} — ${p.likes}👍</div>`).join("")+(hits.length>3?`<div>+${hits.length-3} autres</div>`:"")
+    :`<div>Aucun post ≥ ${thr} likes</div>`;
 }
 
-function renderFavorites(){
-  const favPosts=RAW.filter(p=>FAVS.has(p.id));
-  render(favPosts,"favGrid");
-}
-
-function tokenize(text){
-  return text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9#\s]/gi," ").split(/\s+/).filter(Boolean);
-}
-
-const STOP=new Set(["le","la","les","de","des","du","un","une","et","ou","en","au","aux","dans","pour","par","sur","avec","sans","entre","chez","vers","sous","sur","ce","cet","cette","cela","ça","cette","ces","son","sa","ses","leur","leurs","notre","vos","votre","nos","plus","moins","tres","est","sont","ete","etre","ete","serai","sera","seront","etre","que","qui","quoi","quand","ou","a","à","d","l","je","tu","il","elle","on","nous","vous","ils","elles","me","te","se","y","en","ne","pas","ni","car","donc","or","mais","si","comme","afin","alors","ainsi","apres","avant","depuis","pendant","toujours","jamais","tout","toute","tous","toutes","dont","aujourd","hui","the","and","of","to","in","is","are","be","have","has","had","do","did","rt","via","very","plus","moins","encore","tres","trop","bien","mal","bon","bonne","aussi","ailleurs","quel","quelle","quels","quelles","cet","cette","ceci","cela","dont","car","afin","des","du","aux","au"]);
-const COMMON_VERBS=new Set(["etre","avoir","aller","faire","pouvoir","devoir","mettre","dire","voir","savoir","venir","falloir","parler","prendre","donner","trouver","comprendre","poser","lancer","developper","partager","decouvrir","rejoindre","lire"]);
-
-function buildWordCloud(posts){
-  const onlyHashtags=document.getElementById("cloudHashtags").checked;
-  const minOcc=Math.max(1,parseInt(document.getElementById("cloudMin").value||"2",10));
-  const custom=document.getElementById("cloudStop").value.toLowerCase().split(",").map(s=>s.trim()).filter(Boolean);
-  const STOP_ALL=new Set([...STOP, ...COMMON_VERBS, ...custom]);
-
-  const freq=new Map(), df=new Map();
-  const N=posts.length||1;
-  posts.forEach(p=>{
-    const seen=new Set();
-    const words=tokenize(p.text||"");
-    words.forEach(w=>{
-      const isHashtag=w.startsWith("#");
-      const core=isHashtag?w.slice(1):w;
-      if(onlyHashtags && !isHashtag) return;
-      if(core.length<4 && !isHashtag) return;
-      if(STOP_ALL.has(core)) return;
-      if(/^\d+$/.test(core)) return;
-      const token=isHashtag?("#"+core):core;
-      freq.set(token,(freq.get(token)||0)+1);
-      if(!seen.has(token)){ df.set(token,(df.get(token)||0)+1); seen.add(token); }
-    });
+/* ── SAVED VIEWS ── */
+function renderViews(){
+  const list=document.getElementById("viList");
+  list.innerHTML=VIEWS.map((v,i)=>`
+    <div class="vi" data-i="${i}">
+      <span style="font-size:.75rem">🔍</span>
+      <span class="vi-name">${v.name}</span>
+      <button class="vi-del" data-i="${i}">✕</button>
+    </div>`).join("");
+  list.querySelectorAll(".vi").forEach(el=>{
+    el.addEventListener("click",e=>{if(e.target.classList.contains("vi-del"))return;loadView(VIEWS[el.dataset.i])});
   });
-
-  const scored=Array.from(freq.entries()).map(([w,f])=>{
-    const d=df.get(w)||1;
-    const idf=Math.log((N+1)/(d));
-    const score=f*idf;
-    return {w,f,score};
-  }).filter(x=>x.f>=minOcc).sort((a,b)=>b.score-a.score).slice(0,40);
-
-  const wc=document.getElementById("wcloud");
-  wc.innerHTML=scored.map(x=>`<button class="wc${ACTIVE_WORD===x.w?' active':''}" data-w="${x.w}">${x.w} (${x.f})</button>`).join("");
-  wc.querySelectorAll(".wc").forEach(b=>{
-    b.addEventListener("click",()=>{
-      const w=b.getAttribute("data-w");
-      if(ACTIVE_WORD===w){ACTIVE_WORD=null}else{ACTIVE_WORD=w.toLowerCase()}
-      applyFilters();
-    });
+  list.querySelectorAll(".vi-del").forEach(el=>{
+    el.addEventListener("click",e=>{e.stopPropagation();VIEWS.splice(Number(el.dataset.i),1);localStorage.setItem("vl2_views",JSON.stringify(VIEWS));renderViews()});
   });
 }
-
-function buildHeatmap(posts){
-  const table=document.getElementById("heat");
-  const days=["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"];
-  const hours=[8,10,12,14,16,18,20];
-  const grid=[];
-  for(let d=0;d<7;d++){grid[d]=[];for(let h=0;h<hours.length;h++)grid[d][h]=0}
-  posts.forEach(p=>{
-    if(!p.date)return;
-    const d=(p.date.getDay()+6)%7;
-    const hr=p.date.getHours();
-    let idx=hours.findIndex(x=>hr<=x);
-    if(idx<0) idx=hours.length-1;
-    grid[d][idx]+=p.likes+p.comments;
-  });
-  let html="<tr><th></th>"+hours.map(h=>`<th>${h}h</th>`).join("")+"</tr>";
-  const flat=grid.flat();const max=Math.max(1,...flat);
-  for(let d=0;d<7;d++){
-    html+=`<tr><th>${days[d]}</th>`+grid[d].map(v=>{
-      const pct=v/max;const bg=`rgba(79,140,255,${0.15+0.65*pct})`;
-      return `<td style="background:${bg}">${v}</td>`;
-    }).join("")+`</tr>`;
-  }
-  table.innerHTML=html;
+function loadView(v){
+  document.getElementById("q").value=v.q||"";
+  document.getElementById("author").value=v.author||"";
+  document.getElementById("period").value=v.period||"all";
+  document.getElementById("minLikes").value=v.minLikes||0;
+  document.getElementById("sort").value=v.sort||"dateDesc";
+  ACTIVE_WORD=v.word||null;
+  applyFilters();
 }
+document.getElementById("viSave").addEventListener("click",()=>{
+  const name=prompt("Nom de cette vue :");if(!name)return;
+  const f=getF();VIEWS.push({name,...f,word:ACTIVE_WORD});
+  localStorage.setItem("vl2_views",JSON.stringify(VIEWS));renderViews();
+});
 
-function buildAuthorsTable(posts){
-  const agg=new Map();
-  posts.forEach(p=>{
-    const key=p.author||"Inconnu";
-    const a=agg.get(key)||{posts:0,likes:0,comments:0};
-    a.posts+=1; a.likes+=p.likes; a.comments+=p.comments;
-    agg.set(key,a);
-  });
-  const rows=Array.from(agg.entries()).map(([name,a])=>({name,...a})).sort((x,y)=>y.likes-x.likes);
-  const tbody=document.querySelector("#authorsTbl tbody");
-  tbody.innerHTML=rows.map(r=>`<tr><td>${r.name}</td><td>${r.posts}</td><td>${r.likes}</td><td>${r.comments}</td></tr>`).join("");
-}
-
+/* ── INSIGHTS ── */
 function updateInsights(posts){
+  buildKPIs(posts);buildTrend(posts);buildTop(posts);buildHashtags(posts);buildHeatmap(posts);buildAuthors(posts);
+}
+function buildKPIs(posts){
   const likes=posts.reduce((s,p)=>s+p.likes,0);
   const comments=posts.reduce((s,p)=>s+p.comments,0);
-  document.getElementById("kpiPosts").textContent=posts.length;
-  document.getElementById("kpiLikes").textContent=likes;
-  document.getElementById("kpiComments").textContent=comments;
-  buildHeatmap(posts);
-  buildWordCloud(posts);
-  buildAuthorsTable(posts);
+  const avg=posts.length?Math.round((likes+comments)/posts.length):0;
+  const topV=posts.length?Math.max(...posts.map(p=>p.viral)):0;
+  document.getElementById("kpiGrid").innerHTML=`
+    <div class="kpi"><div class="kpi-lbl">Posts filtrés</div><div class="kpi-val">${posts.length}</div></div>
+    <div class="kpi"><div class="kpi-lbl">Likes totaux</div><div class="kpi-val">${likes.toLocaleString("fr")}</div></div>
+    <div class="kpi"><div class="kpi-lbl">Engagement moyen</div><div class="kpi-val">${avg}</div><div class="kpi-sub">likes+coms / post</div></div>
+    <div class="kpi"><div class="kpi-lbl">Score viral max</div><div class="kpi-val">${topV}</div><div class="kpi-sub">eng / jour</div></div>`;
+}
+function buildTrend(posts){
+  const wks={};
+  posts.forEach(p=>{
+    if(!p.date)return;
+    const d=new Date(p.date),jan1=new Date(d.getFullYear(),0,1);
+    const wk=Math.ceil((((d-jan1)/86400000)+jan1.getDay()+1)/7);
+    const k=`${d.getFullYear()}-W${String(wk).padStart(2,"0")}`;
+    if(!wks[k])wks[k]={posts:0,eng:0};
+    wks[k].posts++;wks[k].eng+=p.eng;
+  });
+  const keys=Object.keys(wks).sort().slice(-10);
+  if(!keys.length){document.getElementById("trend").innerHTML='<div style="color:var(--muted);font-size:.78rem">Pas de données</div>';return}
+  const maxE=Math.max(...keys.map(k=>wks[k].eng),1),maxP=Math.max(...keys.map(k=>wks[k].posts),1);
+  document.getElementById("trend").innerHTML=`
+    <div style="display:flex;gap:10px;margin-bottom:6px;font-size:.69rem;color:var(--muted)">
+      <span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--accent);margin-right:3px"></span>Engagement</span>
+      <span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--accent2);opacity:.6;margin-right:3px"></span>Posts</span>
+    </div>
+    <div class="trend">${keys.map(k=>`<div class="tc">
+      <div style="display:flex;align-items:flex-end;gap:2px;height:72px">
+        <div class="tb" style="height:${Math.round(wks[k].eng/maxE*100)}%;background:var(--accent);width:46%" title="Eng:${wks[k].eng}"></div>
+        <div class="tb" style="height:${Math.round(wks[k].posts/maxP*100)}%;background:var(--accent2);opacity:.55;width:46%" title="Posts:${wks[k].posts}"></div>
+      </div>
+      <div class="tl">S${k.split("-W")[1]}</div>
+    </div>`).join("")}</div>`;
+}
+function buildTop(posts){
+  const top=[...posts].sort((a,b)=>b.viral-a.viral).slice(0,5);
+  document.getElementById("topPosts").innerHTML=top.length
+    ?top.map((p,i)=>`<div class="tp" onclick="if('${p.url}')window.open('${p.url}','_blank')">
+        <div class="tp-rk">#${i+1}</div>
+        <div class="tp-info"><div class="tp-auth">${p.author||""}</div><div class="tp-ex">${p.text?p.text.slice(0,72)+"…":"—"}</div></div>
+        <div class="tp-sc"><div class="sv">⚡${p.viral}/j</div><div class="sl">👍${p.likes} 💬${p.comments}</div></div>
+      </div>`).join("")
+    :'<div style="color:var(--muted);font-size:.78rem">Aucun post</div>';
+}
+function buildHashtags(posts){
+  const htEng={},htCnt={};
+  posts.forEach(p=>{
+    const tags=(p.text||"").match(/#[\w\u00C0-\u017E]+/g)||[];
+    const seen=new Set();
+    tags.forEach(t=>{
+      const tag=t.toLowerCase();if(seen.has(tag))return;seen.add(tag);
+      htEng[tag]=(htEng[tag]||0)+p.eng;htCnt[tag]=(htCnt[tag]||0)+1;
+    });
+  });
+  const ranked=Object.keys(htEng).map(t=>({tag:t,avg:Math.round(htEng[t]/htCnt[t]),count:htCnt[t]}))
+    .filter(x=>x.count>=2).sort((a,b)=>b.avg-a.avg).slice(0,10);
+  const c=document.getElementById("htBars");
+  if(!ranked.length){c.innerHTML='<div style="color:var(--muted);font-size:.78rem">Pas assez de données</div>';return}
+  const maxA=ranked[0].avg||1;
+  c.innerHTML=ranked.map(x=>`<div class="ht-row">
+    <div class="ht-tag">${x.tag}</div>
+    <div class="ht-bw"><div class="ht-b" style="width:${Math.round(x.avg/maxA*100)}%"></div></div>
+    <div class="ht-eng">${x.avg} moy.</div>
+  </div>`).join("");
+}
+function buildHeatmap(posts){
+  const days=["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"];
+  const hours=[7,9,11,13,15,17,19,21];
+  const grid=[],counts=[];
+  for(let d=0;d<7;d++){grid[d]=[];counts[d]=[];for(let h=0;h<hours.length;h++){grid[d][h]=0;counts[d][h]=0}}
+  posts.forEach(p=>{
+    if(!p.date)return;
+    const d=(p.date.getDay()+6)%7,hr=p.date.getHours();
+    let idx=hours.findIndex((x,i)=>hr>=x&&(i===hours.length-1||hr<hours[i+1]));
+    if(idx<0)idx=0;
+    grid[d][idx]+=p.eng;counts[d][idx]++;
+  });
+  for(let d=0;d<7;d++)for(let h=0;h<hours.length;h++){
+    if(counts[d][h]>0)grid[d][h]=Math.round(grid[d][h]/counts[d][h]);
+  }
+  const flat=grid.flat(),max=Math.max(1,...flat);
+  let html=`<tr><th></th>${hours.map(h=>`<th>${h}h</th>`).join("")}</tr>`;
+  for(let d=0;d<7;d++){
+    html+=`<tr><th>${days[d]}</th>`+grid[d].map(v=>{
+      const p=v/max;
+      return `<td style="background:rgba(79,140,255,${(0.07+0.73*p).toFixed(2)});color:${p>.5?"var(--text)":"var(--muted)"}">${v||"—"}</td>`;
+    }).join("")+`</tr>`;
+  }
+  document.getElementById("heatTbl").innerHTML=html;
+}
+function buildAuthors(posts){
+  const agg=new Map();
+  posts.forEach(p=>{
+    const k=p.author||"Inconnu";
+    const a=agg.get(k)||{posts:0,likes:0,comments:0};
+    a.posts++;a.likes+=p.likes;a.comments+=p.comments;agg.set(k,a);
+  });
+  const rows=[...agg.entries()].map(([name,a])=>({name,...a,avg:Math.round((a.likes+a.comments)/a.posts)})).sort((x,y)=>y.avg-x.avg);
+  document.querySelector("#authorTbl tbody").innerHTML=rows.map(r=>`<tr><td>${r.name}</td><td>${r.posts}</td><td>${r.likes.toLocaleString("fr")}</td><td>${r.comments}</td><td>${r.avg}</td></tr>`).join("");
 }
 
-async function load(){
-  const res=await fetch(DATA_URL,{cache:"no-store"});
-  const data=await res.json();
-  const list=Array.isArray(data)?data:(Array.isArray(data.items)?data.items:[]);
-  RAW=list.map(mapItem);
-  const authors=uniq(RAW.map(p=>p.author)).sort((a,b)=>a.localeCompare(b,"fr"));
-  const sel=document.getElementById("author");
-  sel.innerHTML='<option value="">Tous auteurs</option>'+authors.map(a=>'<option value="'+a+'">'+a+'</option>').join("");
-  applyFilters();
-  renderFavorites();
+/* ── DIGEST ── */
+function buildDigest(fmt){
+  const top=[...VIEW].sort((a,b)=>b.viral-a.viral).slice(0,10);
+  const dt=new Date().toLocaleDateString("fr-FR");
+  if(fmt==="markdown")return`# Digest Veille LinkedIn — ${dt}\n**${VIEW.length} posts analysés**\n\n---\n\n`+top.map((p,i)=>`## ${i+1}. ${p.author||"—"}\n*${p.date?p.date.toLocaleDateString("fr-FR"):""}* · 👍 ${p.likes} · 💬 ${p.comments} · ⚡ ${p.viral}/j\n\n${p.text?p.text.slice(0,200)+(p.text.length>200?"…":""):"—"}\n\n${p.url?`[Voir le post](${p.url})`:""}  \n\n---\n`).join("\n");
+  if(fmt==="slack")return`*Digest Veille LinkedIn — ${dt}*\n_${VIEW.length} posts_\n\n`+top.map((p,i)=>`*${i+1}. ${p.author||"—"}* | 👍${p.likes} 💬${p.comments} ⚡${p.viral}/j\n>${p.text?p.text.slice(0,140)+"…":"—"}\n${p.url||""}\n`).join("\n");
+  return top.map((p,i)=>`${i+1}. **${p.author||"—"}** — ${p.date?p.date.toLocaleDateString("fr-FR"):""}\n   👍${p.likes} | 💬${p.comments} | ⚡${p.viral}/j\n   ${p.text?p.text.slice(0,180):"—"}\n   ${p.url||""}`).join("\n\n");
 }
+document.getElementById("digestBtn").addEventListener("click",()=>{document.getElementById("moOut").textContent=buildDigest(DFMT);document.getElementById("moDigest").classList.add("open")});
+document.getElementById("moClose").addEventListener("click",()=>document.getElementById("moDigest").classList.remove("open"));
+document.getElementById("moClose2").addEventListener("click",()=>document.getElementById("moDigest").classList.remove("open"));
+document.getElementById("moDigest").addEventListener("click",e=>{if(e.target===e.currentTarget)e.currentTarget.classList.remove("open")});
+document.getElementById("moCopy").addEventListener("click",()=>{
+  navigator.clipboard.writeText(document.getElementById("moOut").textContent).then(()=>{
+    const b=document.getElementById("moCopy");b.textContent="✓ Copié !";setTimeout(()=>b.textContent="Copier",1500);
+  });
+});
+document.querySelectorAll("[data-fmt]").forEach(b=>b.addEventListener("click",()=>{DFMT=b.dataset.fmt;document.getElementById("moOut").textContent=buildDigest(DFMT)}));
 
-document.getElementById("q").addEventListener("input",applyFilters);
-document.getElementById("author").addEventListener("change",applyFilters);
-document.getElementById("period").addEventListener("change",applyFilters);
-document.getElementById("minLikes").addEventListener("input",applyFilters);
-document.getElementById("sort").addEventListener("change",applyFilters);
-document.getElementById("reload").addEventListener("click",load);
-document.getElementById("cloudHashtags").addEventListener("change",()=>buildWordCloud(VIEW));
-document.getElementById("cloudMin").addEventListener("input",()=>buildWordCloud(VIEW));
-document.getElementById("cloudStop").addEventListener("change",()=>buildWordCloud(VIEW));
-document.getElementById("cloudReset").addEventListener("click",()=>{ACTIVE_WORD=null;applyFilters()});
-document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",e=>{
-  document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
-  e.currentTarget.classList.add("active");
-  const tab=e.currentTarget.getAttribute("data-tab");
-  document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+/* ── VIEW MODE ── */
+function setVM(m){
+  VM=m;
+  ["card","list","2col"].forEach(x=>document.getElementById("vt-"+x).classList.toggle("active",x===m));
+  document.getElementById("pg").classList.toggle("two",m==="2col");
+  renderPosts(VIEW,"pg");
+}
+document.getElementById("vt-card").addEventListener("click",()=>setVM("card"));
+document.getElementById("vt-list").addEventListener("click",()=>setVM("list"));
+document.getElementById("vt-2col").addEventListener("click",()=>setVM("2col"));
+
+/* ── TABS ── */
+document.querySelectorAll(".tab-btn").forEach(btn=>btn.addEventListener("click",()=>{
+  document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
+  btn.classList.add("active");
+  const tab=btn.dataset.tab;
+  document.querySelectorAll(".sec").forEach(s=>s.classList.remove("active"));
   document.getElementById(tab).classList.add("active");
-  if(tab==="favorites") renderFavorites();
-  if(tab==="insights") updateInsights(VIEW);
+  if(tab==="favorites")renderFavs();
+  if(tab==="insights")updateInsights(VIEW);
 }));
 
+/* ── SIDEBAR ── */
+document.getElementById("sbTog").addEventListener("click",()=>document.getElementById("sb").classList.toggle("col"));
+
+/* ── FILTER EVENTS ── */
+["q","author","period","minLikes","sort","alertLikes"].forEach(id=>{
+  const el=document.getElementById(id);
+  if(el){el.addEventListener("input",applyFilters);el.addEventListener("change",applyFilters)}
+});
+
+/* ── LOAD ── */
+async function load(){
+  document.getElementById("cnt").textContent="Chargement…";
+  try{
+    const res=await fetch(DATA_URL,{cache:"no-store"});
+    const data=await res.json();
+    const list=Array.isArray(data)?data:(Array.isArray(data.items)?data.items:[]);
+    RAW=list.map(mapItem);
+    const authors=uniq(RAW.map(p=>p.author)).sort((a,b)=>a.localeCompare(b,"fr"));
+    const sel=document.getElementById("author");
+    sel.innerHTML='<option value="">Tous les auteurs</option>'+authors.map(a=>`<option value="${a}">${a}</option>`).join("");
+    applyFilters();renderFavs();renderViews();updateFavCnt();
+  }catch(e){
+    document.getElementById("cnt").textContent="Erreur de chargement";
+    console.error(e);
+  }
+}
+document.getElementById("reload").addEventListener("click",load);
 load();
 </script>
 </body>
